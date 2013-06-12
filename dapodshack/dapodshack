@@ -1,0 +1,111 @@
+#! /usr/bin/env python
+# need to do this the python way
+#dapodshack
+
+import datetime, time, urlparse, os, glob, sys, re, shutil
+import PyRSS2Gen
+import eyeD3
+import feedparser
+
+prepdir = "/var/data/bitt"
+#stagedir = "/var/data/bitt/stage"
+stagedir = "/var/www/rhtorr"
+torrdir = "/var/www/rhtorr"
+#torrdir = "/var/data/bitt/stage"
+torrurl = "http://oldmail.tribunemedia.net/rhtorr"
+feedfile = "/var/www/rhtorr/radiohousetest.xml"
+
+ID3_V1_COMMENT_DESC = "ID3 v1 Comment";
+
+# let's see if we can get the items from the xml file in order to add the new stuff...
+
+myfeed = feedparser.parse(feedfile)
+
+
+# OK, I need a loop to process the files.
+
+tag = eyeD3.Tag()
+
+itemss = []
+
+for someentry in myfeed['entries']:
+	mytitle = someentry.title
+	mycomments = someentry.description
+	mypubdate = someentry.date
+	myenc = someentry.enclosures[0]
+	print "here come the enclosures "
+	print (myenc)
+	myencurl = myenc.href
+	mytorlen = myenc.length
+	myenctype = myenc.type
+	print "here comes the enclosure parts "
+	print myencurl, mytorlen, myenctype
+	
+	itemss.append(
+		PyRSS2Gen.RSSItem(
+		title = mytitle,
+		description = mycomments,
+		pubDate = datetime.datetime.now(),
+		# enclosure = PyRSS2Gen.Enclosure("%s", "%s", "%s" % (myencurl, mytorlen, myenctype))
+		enclosure = PyRSS2Gen.Enclosure("%s" % myencurl, "%s" % mytorlen, "%s" % myenctype)
+		))
+
+
+print "here comes itemss before additions "
+print (itemss)
+
+
+mymp3files = glob.glob('%s/*mp3' % prepdir)
+for myfilea in mymp3files:
+	print(myfilea)
+	myfile = os.path.basename(myfilea)
+	print (myfile)
+	tag.link("%s" % myfilea)
+	mytitle = tag.getTitle()
+	mycomments = ""
+	for c in tag.getComments():
+		if c.description == ID3_V1_COMMENT_DESC:
+			mycomments = c.comment;
+			break;
+		elif c.description == "":
+			mycomments = c.comment;
+	# mycomments = tag._fixToWidth(mycomments, 30);
+	print (mycomments)
+	# os.system("btmakemetafile http://oldmail.tribunemedia.net:6969/announce %s/%s" % (prepdir, myfile))
+	os.system("btmakemetafile %s/%s http://oldmail.tribunemedia.net:6969/announce" % (prepdir, myfile))
+	mytor = "%s.torrent" % myfilea
+	print (mytor)
+        mytorlen = os.path.getsize(mytor)
+        myencurl = "%s/%s.torrent" % (torrurl, myfile)
+        myenctype = "application/x-bittorrent"
+	print (myencurl, mytorlen, myenctype)
+	# why can't I get that enclosure line below to work...???
+        foo1 = "%s %s %s" % (myencurl, mytorlen, myenctype)
+	print (foo1)
+	# myencargs = "%s%s%s%s%s%s%s" % ('"', myencurl, '", "', mytorlen, '", "', myenctype, '"')
+	# print "Here comes encargs"
+	# print (myencargs)
+	itemss.append(
+		PyRSS2Gen.RSSItem(
+		title = mytitle,
+		description = mycomments,
+		pubDate = datetime.datetime.now(),
+		# enclosure = PyRSS2Gen.Enclosure("%s", "%s", "%s" % (myencurl, mytorlen, myenctype))
+		enclosure = PyRSS2Gen.Enclosure("%s" % myencurl, "%s" % mytorlen, "%s" % myenctype)
+		))
+	os.system("mv %s/%s %s/%s" % (prepdir, myfile, stagedir, myfile))
+	os.system("mv %s/%s.torrent %s/%s.torrent" % (prepdir, myfile, torrdir, myfile))
+
+# generate rss feed
+
+rss = PyRSS2Gen.RSS2(
+	title = "Radio House Test Podcast / Torrent Feed",
+	link = "http://oldmail.tribunemedia.net/rhtorr",
+	description = "The latest stuff from Radio House, a group of Radio Stations in the Bahamas",
+	lastBuildDate = datetime.datetime.now(),
+	items = itemss)
+
+rss.write_xml(open(feedfile, "w"))
+
+
+
