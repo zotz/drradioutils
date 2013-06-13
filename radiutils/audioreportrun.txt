@@ -1,0 +1,58 @@
+====================================================
+Total wavs:  28896
+Total mp3s:  2281
+Total audio files:  31177
+====================================================
+Total audio file length in seconds:  5688432.39
+DAYS:HOURS:MIN:SEC
+6:20:7:12
+====================================================
+Total wav audio file length in seconds:  4634894.7
+DAYS:HOURS:MIN:SEC
+22:15:28:14
+----------------------------------------------------
+Breakdown of wav files between pcm and mp2:
+Total pcm wav audio file length in seconds:  1942638.49
+Total mp2 wav audio file length in seconds:  2692255.73
+DAYS:HOURS:MIN:SEC
+22:11:37:18
+DAYS:HOURS:MIN:SEC
+0:3:50:55
+====================================================
+Total mp3 audio file length in seconds:  1053537.69
+DAYS:HOURS:MIN:SEC
+12:4:38:57
+====================================================
+Total audio filesize in Bytes is:  476969016145
+Total audio filesize in Kilobytes is:  465790054
+Total audio filesize in Megabytes is:  454873
+Total audio filesize in Gigabytes is:  444
+Total audio filesize in Terabytes is:  0
+Minimum cut length:  0.0
+Maximum cut length:  4709.02
+====================================================
+Total wav filesize in Bytes is:  451325216084
+Total wav filesize in Kilobytes is:  440747281
+Total wav filesize in Megabytes is:  430417
+Total wav filesize in Gigabytes is:  420
+Total wav filesize in Terabytes is:  0
+====================================================
+Total mp3 filesize in Bytes is:  25643800061
+Total mp3 filesize in Kilobytes is:  25042773
+Total mp3 filesize in Megabytes is:  24455
+Total mp3 filesize in Gigabytes is:  23
+Total mp3 filesize in Terabytes is:  0
+====================================================
+Total pcm wav filesize in Bytes is:  342471676228
+Total pcm wav filesize in Kilobytes is:  334444996
+Total pcm wav filesize in Megabytes is:  326606
+Total pcm wav filesize in Gigabytes is:  318
+Total pcm wav filesize in Terabytes is:  0
+====================================================
+Total mp2 wav filesize in Bytes is:  107789856730
+Total mp2 wav filesize in Kilobytes is:  105263531
+Total mp2 wav filesize in Megabytes is:  102796
+Total mp2 wav filesize in Gigabytes is:  100
+Total mp2 wav filesize in Terabytes is:  0
+====================================================
+
