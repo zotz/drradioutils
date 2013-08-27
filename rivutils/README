@@ -4,3 +4,42 @@ Oct 03/2007
 
 This is for Rivendell utilities.
 
+Info for rivexport stuff.
+
+Currently I only discuss situations where /var/snd and the mysql database 
+are on the same machine.
+
+This machine needs to run apache or some other suitable web server as well.
+
+I put the php stuff in /var/www/riv
+
+I create an directory to hold the exported files as /var/sndexport
+
+I add the following section to /etc/apache2/sites-enabled/000-default
+
+    Alias /sndexport/ "/var/sndexport/"
+    <Directory "/var/sndexport/">
+        Options Indexes MultiViews FollowSymLinks
+        AllowOverride None
+    </Directory>
+
+In the web browser. I point to http://rivbox/riv/
+
+Click on rivexport.php
+
+Choose page that has files you want to export. Choose file(s) to export. Click
+the button to get the bakk rolling.
+
+When done, hit the browser back arrow and choose some more to export or go to 
+http://rivbox/sndexport and you shoud see the exported files as:
+
+010009_001.wav
+010015_001.wav
+
+cartno_cutno.wav files
+
+and as
+
+Artist_Album_Song.mp3 files.
+
+You will need lame and id3v2 installed for the compression to mp3 to work.
