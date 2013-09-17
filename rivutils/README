@@ -43,3 +43,7 @@ and as
 Artist_Album_Song.mp3 files.
 
 You will need lame and id3v2 installed for the compression to mp3 to work.
+
+
+Added rivlogs.php and rivlogs-form.php. These will allow for rivendell logs
+to be viewed in a web browser.
