@@ -1,0 +1,52 @@
+I don't have a proper name for this yet. It is still very *dirty* and more
+than a bit of a mess.
+
+It is largely unfinished as well but I have been putting off making it public
+for too long now. Excuse the mess. Jump in now if you want to help.
+
+What's the deal?
+
+This was written with restaurants and clubs in mind to allow their customers
+to choose what music gets played.
+
+In the long run, I want to enable actual payments as well as a limited number 
+of free credits per customer etc.
+
+The system does not have a decent name yet.
+
+The system uses the wonderful Rivendell Radio Automation system as a base.
+
+http://www.paravelsystems.com
+
+Thanks guys, I hope in the long run this effort brings more customers your way.
+
+The way I am doing things currently is to let the rivz database live on the 
+mysql server that has the regular rivendell database. Three of the tables in
+the rivz database are actually views pulled from the Rivendell database. They
+are used in a read only fashion. Two of the tables are actual tables and are 
+written to by the system. I grant the rduser the same rights on the rivz 
+database as it has on the Rivendell database.
+
+Put the files in a directory in /var/www, I have mine in:
+
+/var/www/rivz
+
+The rivfeed4.php file needs to be running at all times for the system to 
+function properly. For testing, just launch from a terminal.
+
+So, set up a running Rivendell. Load up a log in rdairplay and stary it 
+playing. Launch rivfeed4.php from a terminal and leave it running. Access 
+rivlcient4.php in your browser. Eg:
+
+http://localhost/rivz/rivclient4.php
+
+You should be able to browse your entire music library. When you choose a song
+and bid on it, it should show up in the Queue section. Songs in the queue
+section get fed into rdairplay via a makenext using rmlsend.
+
+This is likely incomplete and confusing. Let me know and we can make it better.
+
+all the best,
+
+drew
+
