@@ -1,0 +1,25 @@
+Thoughts / notes on the output side of things:
+
+Combo 1:
+
+ffmpeg -re -i /var/vid/700002.mp4 -vcodec libx264 -vprofile baseline -g 30 -acodec aac -strict -2 -f flv rtmp://localhost/live/stream
+
+sends to an nxinx rtmp server
+
+vlc --fullscreen rtmp://localhost:1935/live/stream pulls from the rtmp stream created above and displays on physical screen.
+
+Best ways to get bash script, possibly on another machine to execure the ffmpeg line above for each video to be played. I am thinking ssh with remote execution for now.
+I have not played with this enough yet to knkow if the fullscreen will cause issues like it seems to in Combo 2 below.
+
+Combo 2:
+
+cvlc -I http --http-src /usr/share/vlc/lua/http --http-host 192.168.86.145 --http-port 9090 --http-password foo --extra-intf rc --rc-host 192.168.86.145:4212
+or
+cvlc --fullscreen -I http --http-src /usr/share/vlc/lua/http --http-host 192.168.86.145 --http-port 9090 --http-password foo --extraintf rc --rc-host 192.168.86.145:4212
+
+the above is fed via a bash script with netcat, currently from another machine, the line that does it is:
+
+echo "add /var/vid/$1.mp4" | nc 192.168.86.145 4212
+
+the fullscreen option looks better but seems to cause problems.
+
