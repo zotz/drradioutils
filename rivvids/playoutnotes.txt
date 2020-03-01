@@ -23,3 +23,9 @@ echo "add /var/vid/$1.mp4" | nc 192.168.86.145 4212
 
 the fullscreen option looks better but seems to cause problems.
 
+For all combos, attempting to convert all videos to a standard format before putting in library to see if reliability improves. For example:
+
+ffmpeg -i somevideo.mvk -c:v libx264 -profile:v high -preset slow -b:v 1500k -maxrate 2500k -bufsize 5000k -threads 0 -s 1920x1080 -r 30 -codec:a aac -b:a 128k somevideo.mp4
+
+
+
