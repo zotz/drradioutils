@@ -1,0 +1,29 @@
+From the rivendell mailing list: January 19th. 2015 Video playout on Rivendell
+
+http://caspian.paravelsystems.com/pipermail/rivendell-dev/2015-January/022269.html
+
+I can't remember if I have posted these scripts before. I pulled out an old box this morning to install and test airtime and saw it was an old dev box for video playout on rivendell. The scripts are attached.
+
+Videos are given their own group and cart range.
+
+Videos are entered into rivendell's library as MACRO carts.
+
+If the cart number is 700000, the lines in the cart are:
+
+RN touch /home/rduser/700000.runz!
+RN /bin/bash /home/rduser/playvid.sh 700000!
+SP 240807!
+
+The SP line is adjusted to match the length of the video played.
+
+The Title and Artist in the cart matches the length of the 700000.mp4 video.
+
+I will have to do some further checking on this, but these vlc commands may be useful to record here:
+
+vlc -I rc
+vlc -I telnet
+
+all the best,
+
+drew
+
