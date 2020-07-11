@@ -1,0 +1,28 @@
+# Examples for rds.sh from a riv 2.x setup
+# Do your own testing before deploying
+
+#/home/rd/.sngdata:
+(Backyard Riddim)Bring Back The Old Days
+Exec
+MUSIC
+Backyard Riddim
+
+#/home/rd/.sngdata format:
+Title
+Artist
+Group
+Album
+
+# Creation of /home/rd/.sngdata:
+
+# Relevant section from /etc/rivendell/rlm/rlm_filewrite.conf:
+
+[File4]
+Filename=/home/rd/.sngdata
+Append=0
+FormatString=%t\n%a\n%g\n%l\n
+Encoding=0
+MasterLog=Yes
+Aux1Log=No
+Aux2Log=No
+
