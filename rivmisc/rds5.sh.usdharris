@@ -1,0 +1,65 @@
+rds5.sh.usdharris
+
+Ok, so I augmented your script to the following named rds5.sh (5th iteration)
+-------------------------------------------------
+#!/bin/bash
+# Script using the now part of Rivendell's Now and Next data
+# to update the RDS data for a station
+# rds5.sh (5th iteration) - Don Harris mods to drew's stuff
+# t is running on an Optimod 5700i processor if that matters.
+
+# read text file to retrieve info saved by pypad_filewrite.py
+title=$(sed -n '1p' < /tmp/rlm_filewrite.txt)
+artist=$(sed -n '2p' < /tmp/rlm_filewrite.txt)
+
+cartist=$(echo $artist|tr -d '\r')
+ctitle=$(echo $title|tr -d '\r')
+
+
+RadTxt="RT=$ctitle by $cartist"
+
+echo $RadTxt > /home/rd/.rdstxt
+
+sleep 1
+
+        nc 192.2.22.250 22201 <<text
+
+$RadTxt
+
+text
+
+
+exit  
+--------------------------------------------------
+Then I created another script that calls the above  every 30 secs. Named repeat.sh
+
+#!/bin/bash
+
+#Run RDS update every 30 seconds
+
+while true; do
+/home/rd/rds5.sh
+
+sleep 30
+
+done
+----------------------------------------------------------
+
+I start that script in a terminal using
+
+nohup ./repeat.sh &
+
+--------------------------------------------------
+
+Again, not pretty and I would suppose things could be combined. I just know it works.
+
+
+----------
+
+would you like me to post it on my github page so you can point others to it if you need to?
+<usdharris> I don't have any problem with that. It could probably be cleaned up and made more generic I suppose. It might even be specific to the RDS server we use as well. It is running on an Optimod 5700i processor if that matters.
+
+<zotz> I will make minor edits to put the name in a comment and a generic ipaddress and can put that info in a comment too.
+<usdharris> perfect
+ One thing I would like to eliminate is that using the nohup command, it outputs the terminal results to a text file nohup.out  I could have a cron job delete that every day or hour I guess. It's just going to get really bloated and doesn't serve any purpose
+ 
