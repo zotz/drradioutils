@@ -1,0 +1,14 @@
+rd	ALL=NOPASSWD:	/root/runglassnano.sh
+rd	ALL=NOPASSWD:	/root/runglasscoder.sh
+rd	ALL=NOPASSWD:	/root/restartgc.sh
+rd	ALL=NOPASSWD:	/home/rd/gettemp1.py
+rd	ALL=NOPASSWD:	/home/rd/findips.sh
+rd	ALL=NOPASSWD:	/root/musiconly.sh
+rivendell	ALL=NOPASSWD:	/home/rd/vkbdko.sh
+rivendell	ALL=NOPASSWD:	/home/rd/vkbd.sh
+rivendell	ALL=NOPASSWD:	/home/rd/playvid.sh
+rivendell	ALL=NOPASSWD:	/home/rd/playvidrun.sh
+rd	ALL=NOPASSWD:	/home/rd/vkbdko.sh
+rd	ALL=NOPASSWD:	/home/rd/vkbd.sh
+rd	ALL=NOPASSWD:	/home/rd/playvid.sh
+rd	ALL=NOPASSWD:	/home/rd/playvidrun.sh
