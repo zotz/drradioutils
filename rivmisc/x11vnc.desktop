@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=x11vnc
+Comment=X11 VNC server
+Exec=/usr/bin/gnome-terminal -- /usr/bin/x11vnc -rfbauth /home/rd/.vnc/passwd -display :0 -shared -forever -solid red -permitfiletransfer -tightfilexfer
+Terminal=false
+Type=Application
+Categories=Application
