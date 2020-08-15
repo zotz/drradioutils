@@ -24,3 +24,11 @@ Last 4 lines are samples for dummy card and one onboard card.
 
 When you reboot and rivendell is started (say you start rdiarplay, rivendell should start jackd and a "ps ax | grep jackd" in a terminal should show
 a line similar to the one you have configured as the Jack Command Line above.
+
+Workflow on reboot:
+
+user rd set to log in to desktop automatically.
+afterairplay.desktop in /home/rd/.config.autostart is run on user login and in turn runs /home/rd/afterairplay.sh
+afterairplay.sh then runs rdairplay (at which point, rivendell should run jackd as root) and then sudo /root/runglasscoder.sh
+/root/runglasscoder.sh then runs /usr/bin/qjackctl and then runs /root/restartgc.sh
+/root/restartgc.sh then runs glassgui and makes the connections in the jack graph.
