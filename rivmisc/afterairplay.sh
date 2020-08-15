@@ -1,11 +1,16 @@
 #!/usr/bin/bash
 
 cd
+
 rm /home/rd/.rdairplaylock
 /usr/bin/rdairplay &
 touch afterairplay.begun
 
-sleep 45
+sleep 15
+
+sudo /root/runglasscoder.sh &
+
+sleep 30
 
 NOWDATE=`date +%Y%m%d`
 
