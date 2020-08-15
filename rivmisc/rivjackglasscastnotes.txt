@@ -1,0 +1,26 @@
+Notes for:
+
+Rivendell
+Jack
+Glassgui
+Icecast
+
+and perhaps more.
+
+Curently based on Centos7 and Rivendell 3.x
+
+* Getting Rivendell to start jack on boot *
+
+This can be done with a dummy sound card or an actual sound card.
+
+rdadmin->Manage Hosts->Edit desired host->Jack Settings:
+  Select Start Jack Server
+  Jack Server Name: rivendell or rivendell_2, etc.
+  Jack Command Line: /usr/bin/jackd -ddummy -r48000 -p4096
+  Active Audio Ports: 8
+  Jack Command Line: /usr/bin/jackd -dalsa -dhw:ICH7 -r44100 -p2048 -n3
+  Active Audio Ports: 2
+Last 4 lines are samples for dummy card and one onboard card.
+
+When you reboot and rivendell is started (say you start rdiarplay, rivendell should start jackd and a "ps ax | grep jackd" in a terminal should show
+a line similar to the one you have configured as the Jack Command Line above.
