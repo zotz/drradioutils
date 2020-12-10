@@ -1,0 +1,40 @@
+Capture incoming audio on an ASI card with glasscoder/glassgui for sending to an icecast server.
+
+Below is the config we are using. Password changed.
+
+[GlassGui]
+ServerType=icecast2
+ServerLocation=http://localhost:8000/stream
+ServerUsername=source
+ServerPassword=ourpassword
+ServerScriptDown=
+ServerScriptUp=
+ServerMaxConnections=-1
+MetadataPort=0
+VerboseLogging=0
+AudioFormat=mp3
+AudioSamplerate=48000
+AudioChannels=2
+AudioBitrate1=128
+AudioBitrate2=0
+AudioBitrate3=0
+AudioDevice=asihpi
+AlsaDevice=
+AsihpiAdapterIndex=1
+AsihpiInputIndex=1
+AsihpiInputGain=0
+AsihpiChannelMode=1
+AsihpiInputSource=102
+AsihpiInputType=103
+FileName=
+JackServerName=
+JackClientName=
+StreamName=BahamianOrNuttin Main
+StreamDescription=Main BON Feed
+StreamUrl=
+StreamGenre=
+StreamIcq=
+StreamAim=
+StreamIrc=
+StreamTimestampOffset=0
+
