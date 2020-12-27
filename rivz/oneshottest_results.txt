@@ -1,0 +1,28 @@
+Here is the result of the run:
+
+./oneshottest.py 
+Here comes the result...
+[(374, 1, None, u'010001_001', 10001, u'Rupert & The Rolling Coins', u'The Mail', Decimal('5.00'), Decimal('1.00'), datetime.datetime(2020, 12, 27, 13, 15, 26))]
+SELECT * FROM rivque WHERE MainBid ORDER BY BidAmt DESC, BidId ASC LIMIT 1
+From Q4: myBidId is: 374
+Q5:myBidId is: 374
+DELETE FROM rivque WHERE BidId = '%s'
+Q6:myBidId is: 374
+INSERT INTO rivtran (TranId, BidId, CUT_NAME, CART_NUMBER, ARTIST, TITLE, BidAmt, BidTime, LiveQueTime) VALUES ( '', '%s', %s, '%s', %s, %s, %s, %s, %s )
+Q7:myBidId is: 374
+Q7:myParentBid is: 374
+SELECT * FROM rivque WHERE ParentBid = '%s'
+Here comes y: 
+(375, 0, 374, u'010001_001', 10001, u'Rupert & The Rolling Coins', u'The Mail', Decimal('2.00'), Decimal('2.00'), datetime.datetime(2020, 12, 27, 13, 15, 36))
+Q8:myBidId is: 375
+Q8:myParentBid is: 374
+SELECT * FROM rivque WHERE ParentBid = '%s'
+Here comes y: 
+(376, 0, 374, u'010001_001', 10001, u'Rupert & The Rolling Coins', u'The Mail', Decimal('2.00'), Decimal('2.00'), datetime.datetime(2020, 12, 27, 13, 15, 45))
+Q8:myBidId is: 376
+Q8:myParentBid is: 374
+SELECT * FROM rivque WHERE ParentBid = '%s'
+Q9:myBidId is: 376
+Q9:myParentBid is: 374
+DELETE FROM rivque WHERE ParentBid = '%s'
+
