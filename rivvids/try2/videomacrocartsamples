@@ -1,0 +1,24 @@
+Cart
+
+Number: 700002
+Group: VIDEO
+Type: MACRO
+Average Length: 3:04.3
+Title: Coffee
+Artist: Josh Woodward
+User Defines: 700002
+
+Line 1: RN /home/pypad/playvidpywp1.sh 700002!
+Line 2: SP 184317!
+
+======================
+
+Notes, the sleep time in Line 2 comes from the actual length of the video. When you enter that in line 2, 
+it calculates the Average Length.
+
+IIRC, I created a directory /home/pypad and have it temporarily set to chmod 777.
+
+$ grep pypad /etc/passwd
+pypad:x:151:151:Rivendell PyPAD scripts:/dev/null:/bin/false
+
+I did not make any changes to the user.
