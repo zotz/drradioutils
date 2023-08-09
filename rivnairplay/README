@@ -1,0 +1,18 @@
+README for first efforts at a "new" rdairplay called for now rdnairplay
+August 09/2023
+
+Right now this is in python.
+It is dirty code.
+If makes a lot of simplifying assumptions for now.
+It has a lot of stuff hard coded that needs to be choosable in the interface.
+Lots more problems I know about and likely a lot that I don't.
+Assumes that the logmachine being monitored has been generated, loaded, tun, but not modified.
+Right now though, I can use it to see where I am in a virtual log machine that is active.
+
+I first documented my latest idea for something like this here:
+
+https://github.com/ElvishArtisan/rivendell/issues/887
+
+Advice, help, takeover welcome.
+
+If you have any interest in this but need to get it running, i WOULD BE HAPPY TO HELP.
