@@ -3,8 +3,6 @@
 ; system using Now & Next data.
 ;
 
-; this works with rdnairplay.py
-
 ; Section Header
 ;
 ; One section per file to be written should be configured, starting with 
@@ -17,8 +15,7 @@
 ; wildcards as defined in Appendix C of the Rivendell Operations and
 ; Administration Guide.  The user running RDAirPlay must have write
 ; permissions for this location.
-; create /tmp/rivnan on boot and make it writable by rd, rduser, rivendell, etc. as needed
-Filename=/tmp/rivnan/current_v101.txt
+Filename=/tmp/rivnan/current_AP4.txt
 ; Append Mode
 ;
 ; If set to '0', the file will be completely overwritten with the contents
