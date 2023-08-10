@@ -1,4 +1,4 @@
-README for first efforts at a "new" rdairplay called for now rdnairplay
+README for first efforts at a "new" rdairplay called for now rdnairplay. Newer notes at bottom.
 August 09/2023
 
 Right now this is in python.
@@ -16,3 +16,28 @@ https://github.com/ElvishArtisan/rivendell/issues/887
 Advice, help, takeover welcome.
 
 If you have any interest in this but need to get it running, i WOULD BE HAPPY TO HELP.
+
+August 10/2023
+
+Assumptions for command line choosing and more.
+
+I have no rivendell 4 boxes in "production"
+I have some in testing.
+This work is being done on one of those testing machines .
+
+I have 5 services: AP1, AP2, AP3, AP4, and VID
+
+Their log name templates look like:
+
+AP1_%Y_%m_%d
+..
+AP4_%Y_%m_%d
+VID_%Y_%m_%d
+
+matching pyPAD filewrites follow these samples:
+
+Filename=/tmp/rivnan/current_AP4.txt
+Append=0
+FormatString=:%n:%x:\n
+
+I am changing the example pypad files to match the new naming convention.
