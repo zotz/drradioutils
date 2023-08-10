@@ -4,7 +4,7 @@
 # right now, this is a dirty mashup of things / examples I have found on the web and put to alternative use.
 # this is moew to give you ideas and not for use.
 
-version="v0.01"
+version="v0.01a"
 
 import os
 from tkinter import *
@@ -198,13 +198,16 @@ class Application(tk.Frame):
     zfcart = str(myloginfo[0])
     zflogline = str(myloginfo[1])
     tree.selection_set(zflogline)  # Does work.
-    #tree.see(zflogline)
-    tree.see(int(zflogline)-10)
+    print("The current log line is: ", zflogline)
+    if int(zflogline) < 21:
+        tree.see(zflogline)
+    else:
+        tree.see(int(zflogline)-10)
     #tree.selection_set(zflogline)  # Does work
     # The below line means what is seen in the interface may lag the playout by 25 seconds.
     # For now, adjust to suit yourself.
     self.after(25000, self.gettime)
-    print (ltm)  # Prove it is running this and the external code, too.
+    #print (ltm)  # Prove it is running this and the external code, too.
   pass
 
 
@@ -237,3 +240,4 @@ root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
 
 root.mainloop()
+
