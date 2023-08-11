@@ -7,7 +7,7 @@
 
 
 
-version="v0.02_psg"
+version="v0.03_psg"
 
 import PySimpleGUI as sg
 #import pandas as pd
@@ -27,6 +27,8 @@ import string
 
 
 print("This is version: %s" % version)
+
+sg.theme('Light Blue 6')
 
 config = configparser.ConfigParser()
 config.read('/etc/rd.conf')
@@ -116,6 +118,7 @@ while True:
         win1.Hide()
         #
         #values1 = []
+        init_colors = True
         data = []
         header_list = []
 
@@ -172,6 +175,14 @@ while True:
         #layout2 = [[sg.Text('Riv New Airplay Watching Log %s' % vals1[0])],       # note must create a layout from scratch every time. No reuse
         #    [sg.Text(vals1[0])],      
         #    [sg.Button('Exit')]]
+        
+        if init_colors:
+            # set up colors of rows already played
+            row_col_list = []
+            for crow in range(int(zflogline)):
+                #
+                #row_colors = ((5, 'white', 'blue'), (0,'red'), (15,'yellow'))
+                row_col_list.append((crow, 'DarkGray'))
 
         win2 = sg.Window('Riv New Airplay Watching Log %s' % vals1[0], layout2, resizable=True)
         while True:
@@ -192,7 +203,13 @@ while True:
                     win2["table2"].Widget.yview_moveto(((int(zflogline)-15)/len(data)))
                 else:
                     win2["table2"].Widget.yview_moveto((int(zflogline)/len(data)))
-                win2['table2'].update(select_rows = [int(zflogline)])
+                #win2['table2'].update(select_rows = [int(zflogline)])
+                cur_col_list = []
+                cur_col_list.append((int(zflogline), 'green'))
+                #lst_col_list = []
+                row_col_list.append(((int(zflogline)-1), 'DarkGray'))
+                win2['table2'].update(row_colors=(cur_col_list))
+                win2['table2'].update(row_colors=(row_col_list))
                 #print("Reached a Timeout!")
 
             if ev2 == sg.WIN_CLOSED or ev2 == 'Exit':
