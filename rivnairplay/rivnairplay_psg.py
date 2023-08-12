@@ -5,9 +5,15 @@
 # right now, this is a dirty mashup of things / examples I have found on the web and put to alternative use.
 # this is more to give you ideas and not for use.
 
+# I figured out that I need to be dealing with the count column and not the line_id column.
+# if you make log changes in rdlogedit with a log that has auto refresh set to Y
+# then going out and back in will pick up the changes.
+# if changes are made in the regular rdairplay interface, those changes do not seem to end up in the log
+# that rdlogedit sees. and do not show up in rivnairplay at this time.
+# I have yet to test manipulations to a log via rml commands.
 
 
-version="v0.03_psg"
+version="v0.04_psg"
 
 import PySimpleGUI as sg
 #import pandas as pd
@@ -122,7 +128,7 @@ while True:
         data = []
         header_list = []
 
-        stmt = text('''SELECT LOG_LINES.LINE_ID, LOG_LINES.CART_NUMBER, CART.TITLE, CART.ARTIST, CART.ALBUM, LOG_LINES.COUNT, LOG_LINES.START_TIME from LOG_LINES INNER JOIN CART WHERE LOG_LINES.CART_NUMBER = CART.NUMBER AND LOG_LINES.LOG_NAME LIKE :x ORDER BY LOG_LINES.LINE_ID ASC''')
+        stmt = text('''SELECT LOG_LINES.COUNT, LOG_LINES.CART_NUMBER, CART.TITLE, CART.ARTIST, CART.ALBUM, LOG_LINES.LINE_ID, LOG_LINES.START_TIME from LOG_LINES INNER JOIN CART WHERE LOG_LINES.CART_NUMBER = CART.NUMBER AND LOG_LINES.LOG_NAME LIKE :x ORDER BY LOG_LINES.COUNT ASC''')
         stmt = stmt.bindparams(x=mylog)
         r_set=my_conn.execute(stmt)
 
@@ -137,7 +143,7 @@ while True:
 
 
         # Creates columns names for each column ('column0', 'column1', etc)
-        header_list = ['Line ID', 'Cart Number', 'Title', 'Artist', 'Album', 'Count', 'Start Time']
+        header_list = ['Count', 'Cart Number', 'Title', 'Artist', 'Album', 'Line ID', 'Start Time']
                 
 
 
@@ -166,9 +172,6 @@ while True:
         zfcart = str(myloginfo[0])
         zflogline = str(myloginfo[1])
         #print("zflogline is currently: ",zflogline)
-        #window['-TABLE-'].update(row_colors=((zflogline, 'white', 'red'), (9, 'green')))
-        #window['-TABLE-'].Update(select_rows = [zflogline])
-
         
         
         #
@@ -205,7 +208,7 @@ while True:
                     win2["table2"].Widget.yview_moveto((int(zflogline)/len(data)))
                 #win2['table2'].update(select_rows = [int(zflogline)])
                 cur_col_list = []
-                cur_col_list.append((int(zflogline), 'green'))
+                cur_col_list.append((int(zflogline), 'white', 'green'))
                 #lst_col_list = []
                 row_col_list.append(((int(zflogline)-1), 'DarkGray'))
                 win2['table2'].update(row_colors=(cur_col_list))
