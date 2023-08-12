@@ -29,8 +29,12 @@ Append=0
 ; The list of available wildcards can be found in the 'metadata_wildcards.txt'
 ; file in the Rivendell documentation directory.
 ;
+; below is longer and not used
 ;FormatString=-> %n - %t - %a - %x - %z\n
-FormatString=:%n:%x:\n
+; below is using line_id and no longer used
+;FormatString=:%n:%x:\n
+; below is using count instead of line_id Aug 12/2023
+FormatString=:%n:%z:\n
 
 ; Encoding.  Defines the set of escapes to be applied to the PAD fields.
 ; The following options are available:
