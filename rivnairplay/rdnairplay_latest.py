@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# rivnairplay_psg_v004d.py
+# rivnairplay_psg_v004e.py
 
 
-version="v0.04d_psg"
+version="v0.04e_psg"
 
 import PySimpleGUI as sg
 import os
@@ -76,7 +76,7 @@ init_colors = True
 data = []
 header_list = []
 # Creates columns names for each column ('column0', 'column1', etc)
-header_list = ['Count', 'Cart Number', 'Title', 'Artist', 'Album', 'Line ID', 'Average Length', 'Start Time']
+header_list = ['Count', 'Cart Number', 'Title', 'Artist', 'Album', 'Line ID', 'Avg Len', 'Start Time']
 
 #toprow = ['S.No.', 'Name', 'Age', 'Marks']
 
@@ -136,6 +136,66 @@ def blank_frame():
     return sg.Frame("", [[]], pad=(5, 3), expand_x=True, expand_y=True, background_color='#404040', border_width=0)
 
 
+#font='Any 20', background_color=DARK_HEADER_COLOR
+def cart_frame1(cartnum, carttitle, cartartist):
+    this_cart_layout = [
+        [sg.Text(cartnum, key='_cf1-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(carttitle, key='_cf1-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(cartartist, key='_cf1-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.VPush()]
+        ]
+    return sg.Frame("zcl1", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+
+
+def cart_frame2(cartnum, carttitle, cartartist):
+    this_cart_layout = [
+        [sg.Text(cartnum, key='_cf2-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(carttitle, key='_cf2-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(cartartist, key='_cf2-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.VPush()]
+        ]
+    return sg.Frame("zcl2", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+
+def cart_frame3(cartnum, carttitle, cartartist):
+    this_cart_layout = [
+        [sg.Text(cartnum, key='_cf3-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(carttitle, key='_cf3-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(cartartist, key='_cf3-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.VPush()]
+        ]
+    return sg.Frame("zcl3", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+
+def cart_frame4(cartnum, carttitle, cartartist):
+    this_cart_layout = [
+        [sg.Text(cartnum, key='_cf4-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(carttitle, key='_cf4-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(cartartist, key='_cf4-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.VPush()]
+        ]
+    return sg.Frame("zcl4", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+
+
+def cart_frame5(cartnum, carttitle, cartartist):
+    this_cart_layout = [
+        [sg.Text(cartnum, key='_cf5-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(carttitle, key='_cf5-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(cartartist, key='_cf5-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.VPush()]
+        ]
+    return sg.Frame("zcl5", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+
+def cart_frame6(cartnum, carttitle, cartartist):
+    this_cart_layout = [
+        [sg.Text(cartnum, key='_cf6-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(carttitle, key='_cf6-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(cartartist, key='_cf6-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.VPush()]
+        ]
+    return sg.Frame("zcl6", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+
+
+
+
 top_banner = [
                [sg.Text('RDnAirPlay', font='Any 20', background_color=DARK_HEADER_COLOR, enable_events=True, grab=False), sg.Push(background_color=DARK_HEADER_COLOR),
                sg.Text(mydate1, font='Any 20', background_color=DARK_HEADER_COLOR),
@@ -153,7 +213,13 @@ block_3 = [[sg.Text('Block 3', font='Any 20')],
 
 
 block_2 = [
-          [ sg.Text('Hey, this is some text.')]
+            [cart_frame1(0, "That Song1", "Bob's Yer Uncle1")],
+            [cart_frame2(0, "That Song2", "Bob's Yer Uncle2")],
+            [cart_frame3(0, "That Song3", "Bob's Yer Uncle3")],
+            [cart_frame4(0, "That Song4", "Bob's Yer Uncle4")],
+            [cart_frame5(0, "That Song5", "Bob's Yer Uncle5")],
+            [cart_frame6(0, "That Song6", "Bob's Yer Uncle6")],
+            [sg.Text('Hey, this is some text.')]
           ]
 
 
@@ -237,11 +303,11 @@ rcolumn = sg.Column(block_4, pad=BPAD_RIGHT,  expand_x=True, expand_y=True, grab
 
 layout = [
           #[sg.Frame('f01', )],
-          [sg.Frame('f1', top_banner,   pad=(0,0), background_color=DARK_HEADER_COLOR,  expand_x=True, border_width=0, grab=True)],
+          [sg.Frame('f1', top_banner,   pad=(0,0), background_color=DARK_HEADER_COLOR, expand_x=True, border_width=0, grab=True)],
           [sg.Frame('f2', top, size=(1310, 100), pad=BPAD_TOP,  expand_x=True,  relief=sg.RELIEF_GROOVE, border_width=3)],
-          [sg.Frame('f3', [[sg.Frame('f4', block_2, size=(400,150), pad=BPAD_LEFT_INSIDE, border_width=0, expand_x=True, expand_y=True, )],
+          [sg.Frame('f3', [[sg.Frame('f4', block_2, size=(400,550), pad=BPAD_LEFT_INSIDE, border_width=0, expand_x=True, expand_y=True, )],
                         [sg.Frame('f5', block_3, size=(400,150),  pad=BPAD_LEFT_INSIDE, border_width=0, expand_x=True, expand_y=True, element_justification='c')]],
-                    pad=BPAD_LEFT, background_color=BORDER_COLOR, border_width=5, expand_x=True, expand_y=True),
+                    pad=BPAD_LEFT, background_color=BORDER_COLOR, border_width=0, expand_x=True, expand_y=True),
           rcolumn
           #[sg.Frame('f11', [[sg.Frame('f12', block_4, size=(1100,5200), pad=BPAD_RIGHT, border_width=0, expand_x=True, expand_y=True, )],
           #              ],
@@ -253,7 +319,8 @@ layout = [
 window = sg.Window('RDnAirPlay', layout, size=(1400, 900), margins=(0,0), background_color=BORDER_COLOR, no_titlebar=False, resizable=True, right_click_menu=sg.MENU_RIGHT_CLICK_EDITME_VER_LOC_EXIT, enable_close_attempted_event=True)
 window.finalize()
 #rcolumn.expand(True, True)
-
+myoldloginfo=''
+myloginfo=''
 while True:             # Event Loop
     event, values = window.read(timeout=5000, timeout_key='timeout')
     #print("event values is ", event, values)
@@ -263,7 +330,63 @@ while True:             # Event Loop
         pass
     else:
         #print("Reached a Timeout!")
+        myoldloginfo = myloginfo
         myloginfo = GetCartLine()
+        if myoldloginfo != myloginfo :
+            print("myloginfo changed:", myoldloginfo, " to ", myloginfo)
+            zfcart1 = int(myloginfo[0])
+            print("zfcart1 is: ", zfcart1)
+            #print(data[zfcart1])
+            #window['_cf1-num_'].update(zfcart1)
+            zflogline1 = int(myloginfo[1])
+            print("zflogline1 is: ",zflogline1)
+            zftitle1 = data[zflogline1][2]
+            zfartist1 = data[zflogline1][3]
+            window['_cf1-num_'].update(zfcart1)
+            window['_cf1-tit_'].update(zftitle1)
+            window['_cf1-art_'].update(zfartist1)
+            zflogline2 = zflogline1+1
+            zfcart2 = data[zflogline2][1]
+            zftitle2 = data[zflogline2][2]
+            zfartist2 = data[zflogline2][3]
+            #zfcart2 = int(zfcart1)+1
+            print("zfcart is: ", zfcart2)
+            window['_cf2-num_'].update(zfcart2)
+            window['_cf2-tit_'].update(zftitle2)
+            window['_cf2-art_'].update(zfartist2)
+
+            zflogline3 = zflogline1+2
+            zfcart3 = data[zflogline3][1]
+            zftitle3 = data[zflogline3][2]
+            zfartist3 = data[zflogline3][3]
+            window['_cf3-num_'].update(zfcart3)
+            window['_cf3-tit_'].update(zftitle3)
+            window['_cf3-art_'].update(zfartist3)
+
+            zflogline4 = zflogline1+3
+            zfcart4 = data[zflogline4][1]
+            zftitle4 = data[zflogline4][2]
+            zfartist4 = data[zflogline4][3]
+            window['_cf4-num_'].update(zfcart4)
+            window['_cf4-tit_'].update(zftitle4)
+            window['_cf4-art_'].update(zfartist4)
+
+            zflogline5 = zflogline1+4
+            zfcart5 = data[zflogline5][1]
+            zftitle5 = data[zflogline5][2]
+            zfartist5 = data[zflogline5][3]
+            window['_cf5-num_'].update(zfcart5)
+            window['_cf5-tit_'].update(zftitle5)
+            window['_cf5-art_'].update(zfartist5)
+
+            zflogline6 = zflogline1+5
+            zfcart6 = data[zflogline6][1]
+            zftitle6 = data[zflogline6][2]
+            zfartist6 = data[zflogline6][3]
+            window['_cf6-num_'].update(zfcart6)
+            window['_cf6-tit_'].update(zftitle6)
+            window['_cf6-art_'].update(zfartist6)
+
         #print("============================in gettime - Here comes myloginfo: ", myloginfo)
         zfcart = str(myloginfo[0])
         zflogline = str(myloginfo[1])
@@ -300,6 +423,8 @@ while True:             # Event Loop
     elif event == 'File Location':
         sg.popup_scrolled('This Python file is:', __file__)
     elif event == 'Watch Log':
+        myoldloginfo=''
+        myloginfo=''
         #print('0 event')
         #print("values is now: ", values)
         #GetLogLines()
