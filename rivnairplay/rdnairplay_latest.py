@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# rivnairplay_psg_v004e.py
+# rivnairplay_psg_v004f.py
 
 
-version="v0.04e_psg"
+version="v0.04f_psg"
 
 import PySimpleGUI as sg
 import os
@@ -37,6 +37,16 @@ dbdbase = config['mySQL']['Database']
 #my_conn = create_engine("mysql+mysqldb://%s:%s@localhost/Rivendell" % (dbuser, dbpw))
 my_db = create_engine("mysql+mysqldb://%s:%s@%s/%s" % (dbuser, dbpw, dbhost, dbdbase))
 
+
+#choices = {'a': 1, 'b': 2}
+#result = choices.get(key, 'default')
+
+# A = Audio, C = Command (Macro), S = Split (???)
+mycarttypes = {1: 'A', 2: 'C', 3: 'S'}
+#result = mycarttypes.get(1, 'S')
+#print("result is now: ",result)
+
+mytranstypes = {0: 'Play', 1: 'Segue', 2: 'Stop', 255: 'NoTrans'}
 
 args = len(sys.argv) - 1
 #print ("The script was called with %i arguments" % (args))
@@ -76,7 +86,7 @@ init_colors = True
 data = []
 header_list = []
 # Creates columns names for each column ('column0', 'column1', etc)
-header_list = ['Count', 'Cart Number', 'Title', 'Artist', 'Album', 'Line ID', 'Avg Len', 'Start Time']
+header_list = ['Start Time', 'Trans Type', 'Cart', 'Group', 'Avg Len', 'Title', 'Artist', 'Album', 'Source', 'Line ID', 'Count', 'LLT', 'CT', 'AvgLen ms']
 
 #toprow = ['S.No.', 'Name', 'Age', 'Marks']
 
@@ -137,61 +147,67 @@ def blank_frame():
 
 
 #font='Any 20', background_color=DARK_HEADER_COLOR
-def cart_frame1(cartnum, carttitle, cartartist):
+def cart_frame1(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
     this_cart_layout = [
-        [sg.Text(cartnum, key='_cf1-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(c_type, key='_cf1-ctp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cartnum, key='_cf1-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cgroup, key='_cf1-grp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cstart, key='_cf1-cst_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cavglen, key='_cf1-len_', font='Any 6', text_color='blue', background_color='white'), sg.Text(cttype, key='_cf1-ttp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
         [sg.Text(carttitle, key='_cf1-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.Text(cartartist, key='_cf1-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(msecs, key='_cf1-sec_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        
         [sg.VPush()]
         ]
     return sg.Frame("zcl1", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
 
 
-def cart_frame2(cartnum, carttitle, cartartist):
+def cart_frame2(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
     this_cart_layout = [
-        [sg.Text(cartnum, key='_cf2-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(c_type, key='_cf2-ctp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cartnum, key='_cf2-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cgroup, key='_cf2-grp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cstart, key='_cf2-cst_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cavglen, key='_cf2-len_', font='Any 6', text_color='blue', background_color='white')],
         [sg.Text(carttitle, key='_cf2-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.Text(cartartist, key='_cf2-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(msecs, key='_cf2-sec_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        
         [sg.VPush()]
         ]
     return sg.Frame("zcl2", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
 
-def cart_frame3(cartnum, carttitle, cartartist):
+def cart_frame3(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
     this_cart_layout = [
-        [sg.Text(cartnum, key='_cf3-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(c_type, key='_cf3-ctp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cartnum, key='_cf3-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cgroup, key='_cf3-grp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cstart, key='_cf3-cst_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cavglen, key='_cf3-len_', font='Any 6', text_color='blue', background_color='white')],
         [sg.Text(carttitle, key='_cf3-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.Text(cartartist, key='_cf3-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(msecs, key='_cf3-sec_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
+        
         [sg.VPush()]
         ]
-    return sg.Frame("zcl3", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+    return sg.Frame("zcf3", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
 
-def cart_frame4(cartnum, carttitle, cartartist):
+def cart_frame4(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
     this_cart_layout = [
-        [sg.Text(cartnum, key='_cf4-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(c_type, key='_cf4-ctp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cartnum, key='_cf4-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cgroup, key='_cf4-grp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cstart, key='_cf4-cst_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cavglen, key='_cf4-len_', font='Any 6', text_color='blue', background_color='white')],
         [sg.Text(carttitle, key='_cf4-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.Text(cartartist, key='_cf4-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.VPush()]
         ]
-    return sg.Frame("zcl4", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+    return sg.Frame("zcf4", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
 
 
-def cart_frame5(cartnum, carttitle, cartartist):
+def cart_frame5(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
     this_cart_layout = [
-        [sg.Text(cartnum, key='_cf5-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(c_type, key='_cf5-ctp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cartnum, key='_cf5-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cgroup, key='_cf5-grp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cstart, key='_cf5-cst_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cavglen, key='_cf5-len_', font='Any 6', text_color='blue', background_color='white')],
         [sg.Text(carttitle, key='_cf5-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.Text(cartartist, key='_cf5-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.VPush()]
         ]
-    return sg.Frame("zcl5", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+    return sg.Frame("zcf5", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
 
-def cart_frame6(cartnum, carttitle, cartartist):
+def cart_frame6(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
     this_cart_layout = [
-        [sg.Text(cartnum, key='_cf6-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
+        [sg.Text(c_type, key='_cf6-ctp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cartnum, key='_cf6-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cgroup, key='_cf6-grp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cstart, key='_cf6-cst_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cavglen, key='_cf6-len_', font='Any 6', text_color='blue', background_color='white')],
         [sg.Text(carttitle, key='_cf6-tit_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.Text(cartartist, key='_cf6-art_', font='Any 8', text_color='blue', background_color='white', pad=(4,0))],
         [sg.VPush()]
         ]
-    return sg.Frame("zcl6", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
+    return sg.Frame("zcf6", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
 
 
 
@@ -211,14 +227,15 @@ block_3 = [[sg.Text('Block 3', font='Any 20')],
             [sg.T('This frame has element_justification="c"')]
             ]
 
+# def cart_frame1(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
 
 block_2 = [
-            [cart_frame1(0, "That Song1", "Bob's Yer Uncle1")],
-            [cart_frame2(0, "That Song2", "Bob's Yer Uncle2")],
-            [cart_frame3(0, "That Song3", "Bob's Yer Uncle3")],
-            [cart_frame4(0, "That Song4", "Bob's Yer Uncle4")],
-            [cart_frame5(0, "That Song5", "Bob's Yer Uncle5")],
-            [cart_frame6(0, "That Song6", "Bob's Yer Uncle6")],
+            [cart_frame1('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song1", "Bob's Yer Uncle1", 10000)],
+            [cart_frame2('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song2", "Bob's Yer Uncle2", 10000)],
+            [cart_frame3('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song3", "Bob's Yer Uncle3", 10000)],
+            [cart_frame4('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song4", "Bob's Yer Uncle4", 10000)],
+            [cart_frame5('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song5", "Bob's Yer Uncle5", 10000)],
+            [cart_frame6('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song6", "Bob's Yer Uncle6", 10000)],
             [sg.Text('Hey, this is some text.')]
           ]
 
@@ -252,7 +269,19 @@ def GetLogLines():
     triggerfile = "/tmp/rivnan/current_"+mybase+".txt"
 
 
-    stmt = text('''SELECT LOG_LINES.COUNT, LOG_LINES.CART_NUMBER, CART.TITLE, CART.ARTIST, CART.ALBUM, LOG_LINES.LINE_ID, CART.AVERAGE_LENGTH, LOG_LINES.START_TIME from LOG_LINES INNER JOIN CART WHERE LOG_LINES.CART_NUMBER = CART.NUMBER AND LOG_LINES.LOG_NAME LIKE :x ORDER BY LOG_LINES.COUNT ASC''')
+# CART
+# TYPE                 int(10) unsigned  1 = Audio, 2 = Command, 3 = Split
+
+# LOG_LINES
+#TYPE                 int(11) signed     0=Cart, 1=Marker, 2=OpenBracket,
+#                                        3=CloseBracket, 4=Link
+#SOURCE               int(11) signed     0=Manual, 1=Traffic, 2=Music,
+#                                        3=Template
+#
+#TRANS_TYPE           int(11) signed     0 = Play, 1 = Stop, 2 = Segue
+
+
+    stmt = text('''SELECT LOG_LINES.START_TIME, LOG_LINES.TRANS_TYPE, LOG_LINES.CART_NUMBER, CART.GROUP_NAME, CART.AVERAGE_LENGTH, CART.TITLE, CART.ARTIST, CART.ALBUM, LOG_LINES.SOURCE, LOG_LINES.COUNT, LOG_LINES.LINE_ID, LOG_LINES.TYPE, CART.TYPE from LOG_LINES INNER JOIN CART WHERE LOG_LINES.CART_NUMBER = CART.NUMBER AND LOG_LINES.LOG_NAME LIKE :x ORDER BY LOG_LINES.COUNT ASC''')
     stmt = stmt.bindparams(x=mylog)
     #print("in GetLogLines, stmt is now: ", stmt)
     
@@ -261,10 +290,10 @@ def GetLogLines():
     # add data to the list for the table
     for dt in r_set:
 
-        myavglen = FixAvgLen(dt[6])
+        myavglen = FixAvgLen(dt[4])
 
 #        logrow = [dt[0],dt[1],dt[2],dt[3],dt[4],dt[5],dt[6]]
-        logrow = [dt[0],dt[1],dt[2],dt[3],dt[4],dt[5],myavglen,dt[7]]
+        logrow = [dt[0],dt[1],dt[2],dt[3],myavglen,dt[5],dt[6],dt[7],dt[8],dt[9],dt[10],dt[11],dt[12],dt[4]]
         #print("Logrow is now: ", logrow)
         data.append(logrow)
         pass
@@ -322,13 +351,15 @@ window.finalize()
 myoldloginfo=''
 myloginfo=''
 while True:             # Event Loop
-    event, values = window.read(timeout=5000, timeout_key='timeout')
+    event, values = window.read(timeout=1000, timeout_key='timeout')
     #print("event values is ", event, values)
     
     if event != 'timeout':
         #print(ev2)
         pass
     else:
+        # def cart_frame1(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
+        #
         #print("Reached a Timeout!")
         myoldloginfo = myloginfo
         myloginfo = GetCartLine()
@@ -340,52 +371,89 @@ while True:             # Event Loop
             #window['_cf1-num_'].update(zfcart1)
             zflogline1 = int(myloginfo[1])
             print("zflogline1 is: ",zflogline1)
-            zftitle1 = data[zflogline1][2]
-            zfartist1 = data[zflogline1][3]
+            # str(timedelta(seconds=elapsed))
+            print("starttime number: ", (data[zflogline1][0]/1000))
+            #zfcstart1 = str(datetime.timedelta((data[zflogline1][0]/1000)))
+            # tvar = (time.strftime("%H:%M:%S.{}".format(str(elapsed % 1)[2:])[:15], time.gmtime(elapsed)))
+            zcst1 = (data[zflogline1][0]/1000)
+            zfcstart1 = (time.strftime("%H:%M:%S.{}".format(str((zcst1) % 1)[2:])[:15], time.gmtime(zcst1)))
+            zftitle1 = data[zflogline1][5]
+            zfartist1 = data[zflogline1][6]
+            zfavglen1 = data[zflogline1][4]
+            zfmsecs1 = data[zflogline1][13]
+            zfcarttype1 = mycarttypes.get(data[zflogline1][12], 'S')
+            print("transtype number is: ", data[zflogline1][1])
+            zftranstype1 = mytranstypes.get(data[zflogline1][1], 'Oops')
+            window['_cf1-ctp_'].update(zfcarttype1)
+            window['_cf1-ttp_'].update(zftranstype1)
             window['_cf1-num_'].update(zfcart1)
             window['_cf1-tit_'].update(zftitle1)
             window['_cf1-art_'].update(zfartist1)
+            window['_cf1-len_'].update(zfavglen1)
+            window['_cf1-sec_'].update(zfmsecs1)
+            window['_cf1-cst_'].update(zfcstart1)
+            
+            #========================================================
             zflogline2 = zflogline1+1
-            zfcart2 = data[zflogline2][1]
-            zftitle2 = data[zflogline2][2]
-            zfartist2 = data[zflogline2][3]
-            #zfcart2 = int(zfcart1)+1
+            zfcart2 = data[zflogline2][2]
+            zcst2 = (data[zflogline2][0]/1000)
+            zfcstart2 = (time.strftime("%H:%M:%S.{}".format(str((zcst2) % 1)[2:])[:15], time.gmtime(zcst2)))
+            zftitle2 = data[zflogline2][5]
+            zfartist2 = data[zflogline2][6]
+            zfavglen2 = data[zflogline2][4]
+            zfmsecs2 = data[zflogline2][13]
+            zfcarttype2 = mycarttypes.get(data[zflogline2][12], 'S')
+            window['_cf2-ctp_'].update(zfcarttype2)
             print("zfcart is: ", zfcart2)
+            window['_cf2-ctp_'].update(zfcarttype2)
             window['_cf2-num_'].update(zfcart2)
             window['_cf2-tit_'].update(zftitle2)
             window['_cf2-art_'].update(zfartist2)
-
+            window['_cf2-len_'].update(zfavglen2)
+            window['_cf2-sec_'].update(zfmsecs2)
+            window['_cf2-cst_'].update(zfcstart2)
+            #========================================================
             zflogline3 = zflogline1+2
-            zfcart3 = data[zflogline3][1]
-            zftitle3 = data[zflogline3][2]
-            zfartist3 = data[zflogline3][3]
+            zfcart3 = data[zflogline3][2]
+            zcst3 = (data[zflogline3][0]/1000)
+            zfcstart3 = (time.strftime("%H:%M:%S.{}".format(str((zcst3) % 1)[2:])[:15], time.gmtime(zcst3)))
+            zftitle3 = data[zflogline3][5]
+            zfartist3 = data[zflogline3][6]
+            zfavglen3 = data[zflogline3][4]
+            zfmsecs3 = data[zflogline3][13]
+            zfcarttype3 = mycarttypes.get(data[zflogline3][12], 'S')
+            window['_cf3-ctp_'].update(zfcarttype3)
             window['_cf3-num_'].update(zfcart3)
             window['_cf3-tit_'].update(zftitle3)
             window['_cf3-art_'].update(zfartist3)
-
+            window['_cf3-len_'].update(zfavglen3)
+            window['_cf3-sec_'].update(zfmsecs3)
+            window['_cf3-cst_'].update(zfcstart3)
+            #========================================================
             zflogline4 = zflogline1+3
-            zfcart4 = data[zflogline4][1]
-            zftitle4 = data[zflogline4][2]
-            zfartist4 = data[zflogline4][3]
+            zfcart4 = data[zflogline4][2]
+            zftitle4 = data[zflogline4][5]
+            zfartist4 = data[zflogline4][6]
             window['_cf4-num_'].update(zfcart4)
             window['_cf4-tit_'].update(zftitle4)
             window['_cf4-art_'].update(zfartist4)
-
+            #========================================================
             zflogline5 = zflogline1+4
-            zfcart5 = data[zflogline5][1]
-            zftitle5 = data[zflogline5][2]
-            zfartist5 = data[zflogline5][3]
+            zfcart5 = data[zflogline5][2]
+            zftitle5 = data[zflogline5][5]
+            zfartist5 = data[zflogline5][6]
             window['_cf5-num_'].update(zfcart5)
             window['_cf5-tit_'].update(zftitle5)
             window['_cf5-art_'].update(zfartist5)
-
+            #========================================================
             zflogline6 = zflogline1+5
-            zfcart6 = data[zflogline6][1]
-            zftitle6 = data[zflogline6][2]
-            zfartist6 = data[zflogline6][3]
+            zfcart6 = data[zflogline6][2]
+            zftitle6 = data[zflogline6][5]
+            zfartist6 = data[zflogline6][6]
             window['_cf6-num_'].update(zfcart6)
             window['_cf6-tit_'].update(zftitle6)
             window['_cf6-art_'].update(zfartist6)
+            #========================================================
 
         #print("============================in gettime - Here comes myloginfo: ", myloginfo)
         zfcart = str(myloginfo[0])
