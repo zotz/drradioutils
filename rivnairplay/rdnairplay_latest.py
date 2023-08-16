@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# rivnairplay_psg_v004g.py
+# rivnairplay_psg_v004i.py
 
 
-version="v0.04g_psg"
+version="v0.04i_psg"
 
 import PySimpleGUI as sg
 import os
@@ -88,14 +88,17 @@ init_colors = True
 data = []
 header_list = []
 # Creates columns names for each column ('column0', 'column1', etc)
-header_list = ['Start Time', 'Trans Type', 'Cart', 'Group', 'Avg Len', 'Title', 'Artist', 'Album', 'Source', 'Line ID', 'Count', 'LLT', 'CT', 'AvgLen ms']
+header_list = ['StTime', 'TTyp', 'Cart', 'Group', 'ALen', 'Title', 'Artist', 'Album', 'Src', 'LnID', 'Count', 'LLT', 'CT', 'ALenMS']
 
 #toprow = ['S.No.', 'Name', 'Age', 'Marks']
 
 def GetNewLogs():
     
     my_conn = my_db.connect()
+    # for now, by swapping the comments on the 2 query lines below you can see all running log machines or
+    # just the virtual log machines.
     c_set=my_conn.execute('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` > '' ''')
+    #c_set=my_conn.execute('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` > '' AND `MACHINE` > 99 ''')
 
     #print("c_set is: ", c_set)
 
@@ -110,19 +113,6 @@ def GetNewLogs():
     my_conn.close()
 
 GetNewLogs()
-"""
-    Demo - Resizable Dashboard using Frames
-
-    This Demo Program looks similar to the one based on the Column Element.
-    This version has a big difference in how it was implemented and the fact that it can be resized.
-
-    It's a good example of how PySimpleGUI evolves, continuously.  When the original Column-based demo
-        was written, none of these techniques such as expansion, were easily programmed.
-
-    Dashboard using blocks of information.
-
-    Copyright 2021 PySimpleGUI.org
-"""
 
 
 theme_dict = {'BACKGROUND': '#2B475D',
@@ -144,11 +134,106 @@ BPAD_LEFT = ((20,10), (0, 0))
 BPAD_LEFT_INSIDE = (0, (10, 0))
 BPAD_RIGHT = ((10,20), (10, 0))
 
+
+
+
+def FixAvgLen(ms):
+    if isinstance(ms, int):
+        seconds, ms = divmod(ms, 1000)
+        #seconds = (ms/1000)
+        minutes, seconds = divmod(seconds, 60)
+        #print(f'{int(minutes):01d}:{int(seconds):02d}')
+        #myfixavg = datetime.strftime(f'{int(minutes):01d}:{int(seconds):02d}')
+        # str(i).zfill(5)
+        myfixavg = str(minutes).zfill(1)+":"+str(seconds).zfill(2)
+        #print(myfixavg)
+        return(myfixavg)
+    else:
+        return('0:00')
+    
+def FixSeconds(seconds):
+    if isinstance(seconds, int):
+        #seconds, ms = divmod(ms, 1000)
+        #seconds = (ms/1000)
+        minutes, seconds = divmod(seconds, 60)
+        #print(f'{int(minutes):01d}:{int(seconds):02d}')
+        #myfixavg = datetime.strftime(f'{int(minutes):01d}:{int(seconds):02d}')
+        # str(i).zfill(5)
+        myfixsecs = str(minutes).zfill(1)+":"+str(seconds).zfill(2)
+        #print(myfixavg)
+        return(myfixsecs)
+    else:
+        return('0:00')
+
+
+def GetLogLines():
+    my_conn = my_db.connect()
+    #print("Getting log lines..........")
+    #print("in GetLogLines, data is now: ", data)
+    data.clear()
+    #print("in GetLogLines, data is now: ", data)
+    #print("in GetLogLines, mylog is now: ", mylog)
+    #mylog = vals1[0]
+    mybase = mylog[0:3]
+    triggerfile = "/tmp/rivnan/current_"+mybase+".txt"
+
+
+    stmt = text('''SELECT LOG_LINES.START_TIME, LOG_LINES.TRANS_TYPE, LOG_LINES.CART_NUMBER, CART.GROUP_NAME, CART.AVERAGE_LENGTH, CART.TITLE, CART.ARTIST, CART.ALBUM, LOG_LINES.SOURCE, LOG_LINES.COUNT, LOG_LINES.LINE_ID, LOG_LINES.TYPE, CART.TYPE from LOG_LINES INNER JOIN CART WHERE LOG_LINES.CART_NUMBER = CART.NUMBER AND LOG_LINES.LOG_NAME LIKE :x ORDER BY LOG_LINES.COUNT ASC''')
+    stmt = stmt.bindparams(x=mylog)
+    #print("in GetLogLines, stmt is now: ", stmt)
+    
+    r_set=my_conn.execute(stmt)
+    #print("in GetLogLines, r_set is now: ", r_set)
+    # add data to the list for the table
+    for dt in r_set:
+
+        myavglen = FixAvgLen(dt[4])
+
+#        logrow = [dt[0],dt[1],dt[2],dt[3],dt[4],dt[5],dt[6]]
+        logrow = [dt[0],dt[1],dt[2],dt[3],myavglen,dt[5],dt[6],dt[7],dt[8],dt[9],dt[10],dt[11],dt[12],dt[4]]
+        #print("Logrow is now: ", logrow)
+        data.append(logrow)
+        pass
+    #print("in GetLogLines, after select, data is now: ", data)
+    my_conn.close()
+
+GetLogLines()
+
+
+block_4 = [
+            [ sg.Text('Choose Log Machine / Running Log'), sg.Text('', key='_OUTPUT_')],
+            [sg.Combo(names, font=('Arial Bold', 14),  key='logchoice', enable_events=True,  readonly=False)],
+            [sg.Table(values=data, headings=header_list,
+                      auto_size_columns=True,
+                      display_row_numbers=True,
+                      justification='left', key='_table_',
+                      selected_row_colors='red on yellow',
+                      vertical_scroll_only = False,
+                      enable_events=True,
+                      expand_x=True,
+                      expand_y=True,
+                      enable_click_events=True,
+                      num_rows=min(25, len(data))
+                      )
+             ],
+            #[sg.Text('Riv New Airplay Watching Log %s' % vals1[0])],
+            
+            [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_MYLOG_')],
+            #[sg.Text(vals1[0])],
+            [sg.Text('', key='_OUTPUT1_')]
+        ]
+
+
+
+
+
 def blank_frame():
     return sg.Frame("", [[]], pad=(5, 3), expand_x=True, expand_y=True, background_color='#404040', border_width=0)
 
-# psg.ProgressBar(100, orientation='h', expand_x=True, size=(20, 20),  key='-PBAR-'),
-#font='Any 20', background_color=DARK_HEADER_COLOR
+
+def blank_framex(x):
+    return sg.Frame(x, [[]], pad=(5, 3), expand_x=True, expand_y=True, background_color='#404040', border_width=0)
+
 def cart_frame1(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, csecs, elsecs, resecs):
     this_cart_layout = [
         [sg.Text(c_type, key='_cf1-ctp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cartnum, key='_cf1-num_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cgroup, key='_cf1-grp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cstart, key='_cf1-cst_', font='Any 6', text_color='blue', background_color='white', pad=(4,0)), sg.Text(cavglen, key='_cf1-len_', font='Any 6', text_color='blue', background_color='white'), sg.Text(cttype, key='_cf1-ttp_', font='Any 6', text_color='blue', background_color='white', pad=(4,0))],
@@ -213,8 +298,6 @@ def cart_frame6(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, car
     return sg.Frame("zcf6", this_cart_layout, pad=(0, 1), expand_x=True, expand_y=True, background_color='white', border_width=0)
 
 
-
-
 top_banner = [
                [sg.Text('RDnAirPlay', font='Any 20', background_color=DARK_HEADER_COLOR, enable_events=True, grab=False), sg.Push(background_color=DARK_HEADER_COLOR),
                sg.Text(mydate1, font='Any 20', background_color=DARK_HEADER_COLOR),
@@ -225,12 +308,12 @@ top  = [[sg.Push(), sg.Text('Check Paradise Island Cam https://www.paradiseislan
             [sg.T('This Frame has a relief while the others do not')],
             [sg.T('This window is resizable (see that sizegrip in the bottom right?)')]]
 
-block_3 = [[sg.Text('Block 3', font='Any 20')],
-            [sg.Input(), sg.Text('Some Text')],
-            [sg.T('This frame has element_justification="c"')]
-            ]
+#sg.theme('DarkGrey4')
 
-# def cart_frame1(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
+
+
+
+
 
 block_2 = [
             [cart_frame1('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song1", "Bob's Yer Uncle1", 10000, 0, 10000)],
@@ -243,124 +326,25 @@ block_2 = [
           ]
 
 
+layout_frame1 = [
+    #[blank_framex('bf1'), blank_framex('bf2')],
+    #[blank_framex('bf1')],
+    [sg.Frame('f4', block_2, size=(400,550), pad=BPAD_LEFT_INSIDE, border_width=0, expand_x=True, expand_y=True, )],
+    [sg.Frame("Frame 3", [[blank_framex('bf3')]], pad=(5, 3), expand_x=True, expand_y=True, title_location=sg.TITLE_LOCATION_TOP)],
+]
 
-
-def FixAvgLen(ms):
-    if isinstance(ms, int):
-        seconds, ms = divmod(ms, 1000)
-        #seconds = (ms/1000)
-        minutes, seconds = divmod(seconds, 60)
-        #print(f'{int(minutes):01d}:{int(seconds):02d}')
-        #myfixavg = datetime.strftime(f'{int(minutes):01d}:{int(seconds):02d}')
-        # str(i).zfill(5)
-        myfixavg = str(minutes).zfill(1)+":"+str(seconds).zfill(2)
-        #print(myfixavg)
-        return(myfixavg)
-    else:
-        return('0:00')
-    
-def FixSeconds(seconds):
-    if isinstance(seconds, int):
-        #seconds, ms = divmod(ms, 1000)
-        #seconds = (ms/1000)
-        minutes, seconds = divmod(seconds, 60)
-        #print(f'{int(minutes):01d}:{int(seconds):02d}')
-        #myfixavg = datetime.strftime(f'{int(minutes):01d}:{int(seconds):02d}')
-        # str(i).zfill(5)
-        myfixsecs = str(minutes).zfill(1)+":"+str(seconds).zfill(2)
-        #print(myfixavg)
-        return(myfixsecs)
-    else:
-        return('0:00')
-
-
-def GetLogLines():
-    my_conn = my_db.connect()
-    #print("Getting log lines..........")
-    #print("in GetLogLines, data is now: ", data)
-    data.clear()
-    #print("in GetLogLines, data is now: ", data)
-    #print("in GetLogLines, mylog is now: ", mylog)
-    #mylog = vals1[0]
-    mybase = mylog[0:3]
-    triggerfile = "/tmp/rivnan/current_"+mybase+".txt"
-
-
-# CART
-# TYPE                 int(10) unsigned  1 = Audio, 2 = Command, 3 = Split
-
-# LOG_LINES
-#TYPE                 int(11) signed     0=Cart, 1=Marker, 2=OpenBracket,
-#                                        3=CloseBracket, 4=Link
-#SOURCE               int(11) signed     0=Manual, 1=Traffic, 2=Music,
-#                                        3=Template
-#
-#TRANS_TYPE           int(11) signed     0 = Play, 1 = Stop, 2 = Segue
-
-
-    stmt = text('''SELECT LOG_LINES.START_TIME, LOG_LINES.TRANS_TYPE, LOG_LINES.CART_NUMBER, CART.GROUP_NAME, CART.AVERAGE_LENGTH, CART.TITLE, CART.ARTIST, CART.ALBUM, LOG_LINES.SOURCE, LOG_LINES.COUNT, LOG_LINES.LINE_ID, LOG_LINES.TYPE, CART.TYPE from LOG_LINES INNER JOIN CART WHERE LOG_LINES.CART_NUMBER = CART.NUMBER AND LOG_LINES.LOG_NAME LIKE :x ORDER BY LOG_LINES.COUNT ASC''')
-    stmt = stmt.bindparams(x=mylog)
-    #print("in GetLogLines, stmt is now: ", stmt)
-    
-    r_set=my_conn.execute(stmt)
-    #print("in GetLogLines, r_set is now: ", r_set)
-    # add data to the list for the table
-    for dt in r_set:
-
-        myavglen = FixAvgLen(dt[4])
-
-#        logrow = [dt[0],dt[1],dt[2],dt[3],dt[4],dt[5],dt[6]]
-        logrow = [dt[0],dt[1],dt[2],dt[3],myavglen,dt[5],dt[6],dt[7],dt[8],dt[9],dt[10],dt[11],dt[12],dt[4]]
-        #print("Logrow is now: ", logrow)
-        data.append(logrow)
-        pass
-    #print("in GetLogLines, after select, data is now: ", data)
-    my_conn.close()
-
-GetLogLines()
-
-
-block_4 = [
-            [ sg.Text('Choose Log Machine / Running Log'), sg.Text('', key='_OUTPUT_')],
-            [sg.Combo(names, font=('Arial Bold', 14),  enable_events=True,  readonly=False), sg.Button('Watch Log')],
-            [sg.Table(values=data, headings=header_list,
-                      auto_size_columns=True,
-                      display_row_numbers=True,
-                      justification='left', key='_table_',
-                      selected_row_colors='red on yellow',
-                      enable_events=True,
-                      expand_x=True,
-                      expand_y=True,
-                      enable_click_events=True,
-                      num_rows=min(25, len(data))
-                      )
-             ],
-            #[sg.Text('Riv New Airplay Watching Log %s' % vals1[0])],
-            
-            [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_MYLOG_')],
-            #[sg.Text(vals1[0])],
-            [sg.Text('', key='_OUTPUT1_')]
-        ]
-
-
-
-#rcolumn = sg.Column(block_4, size=(1100, 520), pad=BPAD_RIGHT,  expand_x=True, expand_y=True, grab=True)
-rcolumn = sg.Column(block_4, pad=BPAD_RIGHT,  expand_x=True, expand_y=True, grab=True)
+#layout_frame2 = [[blank_framex('bfa')]]
+layout_frame2 = block_4
 
 layout = [
-          #[sg.Frame('f01', )],
-          [sg.Frame('f1', top_banner,   pad=(0,0), background_color=DARK_HEADER_COLOR, expand_x=True, border_width=0, grab=True)],
-          [sg.Frame('f2', top, size=(1310, 100), pad=BPAD_TOP,  expand_x=True,  relief=sg.RELIEF_GROOVE, border_width=3)],
-          [sg.Frame('f3', [[sg.Frame('f4', block_2, size=(400,550), pad=BPAD_LEFT_INSIDE, border_width=0, expand_x=True, expand_y=True, )],
-                        [sg.Frame('f5', block_3, size=(400,150),  pad=BPAD_LEFT_INSIDE, border_width=0, expand_x=True, expand_y=True, element_justification='c')]],
-                    pad=BPAD_LEFT, background_color=BORDER_COLOR, border_width=0, expand_x=True, expand_y=True),
-          rcolumn
-          #[sg.Frame('f11', [[sg.Frame('f12', block_4, size=(1100,5200), pad=BPAD_RIGHT, border_width=0, expand_x=True, expand_y=True, )],
-          #              ],
-          #          pad=BPAD_RIGHT, background_color=BORDER_COLOR, border_width=5, expand_x=True, expand_y=True),
-          # ]
-          ]
-        ]
+    [sg.Frame('f1', top_banner,   pad=(0,0), background_color=DARK_HEADER_COLOR, expand_x=True, border_width=0, grab=True)],
+    [sg.Frame('f2', top, size=(1310, 100), expand_x=True,  relief=sg.RELIEF_GROOVE, border_width=3)],
+    [sg.Frame("Frame 1", layout_frame1, size=(450, 750)),
+     sg.Frame("Frame 2", layout_frame2, size=(1000, 750), title_location=sg.TITLE_LOCATION_TOP)],]
+
+
+
+
 
 window = sg.Window('RDnAirPlay', layout, size=(1400, 900), margins=(0,0), background_color=BORDER_COLOR, no_titlebar=False, resizable=True, right_click_menu=sg.MENU_RIGHT_CLICK_EDITME_VER_LOC_EXIT, enable_close_attempted_event=True)
 window.finalize()
@@ -370,7 +354,7 @@ myoldloginfo=''
 myloginfo=''
 while True:             # Event Loop
     event, values = window.read(timeout=1000, timeout_key='timeout')
-    #print("event values is ", event, values)
+    print("event | values is ", event, " | ", values)
     
     if event != 'timeout':
         #print(ev2)
@@ -542,7 +526,7 @@ while True:             # Event Loop
         sg.popup_scrolled(sg.get_versions(), keep_on_top=True)
     elif event == 'File Location':
         sg.popup_scrolled('This Python file is:', __file__)
-    elif event == 'Watch Log':
+    elif event == 'logchoice':
         # NOTE: As of now, when we first begin monitoring a log, the system does not know how far along the playback of the initial cart is.
         # The progress bar/etc. will be messed up until we change to the next song.
         # Also, the time elapsed, time remaining, and progress bar are approximations / guesses. There is no communication between caed, etc. and this system
@@ -553,7 +537,7 @@ while True:             # Event Loop
         #GetLogLines()
         init_colors = True
         #print("mylog is now: ", mylog)
-        mylog = values[1]
+        mylog = values['logchoice']
         #print("mylog is now: ", mylog)
         mybase = mylog[0:3]
         #print("mybase is now: ", mybase)
