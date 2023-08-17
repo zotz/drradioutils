@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# rivnairplay_psg_v004i.py
+# rivnairplay_psg_v004j.py
 
 
-version="v0.04i_psg"
+version="v0.04j_psg"
 
 import PySimpleGUI as sg
 import os
@@ -49,28 +49,46 @@ mycarttypes = {1: 'A', 2: 'C', 3: 'S'}
 mytranstypes = {0: 'Play', 1: 'Segue', 2: 'Stop', 255: 'NoTrans'}
 
 args = len(sys.argv) - 1
-#print ("The script was called with %i arguments" % (args))
+print ("The script was called with %i arguments" % (args))
 if(args > 0):
-    #print("The important parameter is %s." % (sys.argv[1]))
+    print("The important parameter is %s." % (sys.argv[1]))
     mybase = sys.argv[1]
 else:
     mybase = "VID"
+
+t1_mybase = mybase
+t2_mybase = mybase
+t3_mybase = mybase
 
 today = datetime.datetime.now()
 mydate = today.strftime('_%Y_%m_%d')
 mydate1 = today.strftime('%d %B, %Y')
 #print(mydate)
 
-mylog = mybase+mydate
+t1_mylog = t1_mybase+mydate
+t2_mylog = t2_mybase+mydate
+t3_mylog = t3_mybase+mydate
 #print("The log to deal with should be: %s" % mylog)
 #
-triggerfile = "/tmp/rivnan/current_"+mybase+".txt"
+t1_triggerfile = "/tmp/rivnan/current_"+t1_mybase+".txt"
+t2_triggerfile = "/tmp/rivnan/current_"+t2_mybase+".txt"
+t3_triggerfile = "/tmp/rivnan/current_"+t3_mybase+".txt"
 #print("Trigger file is: ",triggerfile)
 
 
-def GetCartLine():
-    # get info in file /tmp/rivnan/current_main.txt
-    with open(triggerfile) as f:
+def GetCartLine(watchtab):
+
+    match watchtab:
+        case 't1':
+             loctriggerfile = t1_triggerfile
+        case 't2':
+             loctriggerfile = t2_triggerfile
+        case 't3':
+             loctriggerfile = t3_triggerfile
+        case _:
+            loctriggerfile = t1_triggerfile
+
+    with open(loctriggerfile) as f:
         contents = f.read()
         fdata = contents.split(':')
         #print(contents)
@@ -83,8 +101,12 @@ def GetCartLine():
 global myisrunning
 myisrunning = False
 names = [] #creates a list to store the job names in
-global init_colors
-init_colors = True
+global t1_init_colors
+global t2_init_colors
+global t3_init_colors
+t1_init_colors = True
+t2_init_colors = True
+t3_init_colors = True
 data = []
 header_list = []
 # Creates columns names for each column ('column0', 'column1', etc)
@@ -166,20 +188,36 @@ def FixSeconds(seconds):
         return('0:00')
 
 
-def GetLogLines():
+def GetLogLines(watchtab):
     my_conn = my_db.connect()
-    #print("Getting log lines..........")
-    #print("in GetLogLines, data is now: ", data)
-    data.clear()
-    #print("in GetLogLines, data is now: ", data)
-    #print("in GetLogLines, mylog is now: ", mylog)
-    #mylog = vals1[0]
-    mybase = mylog[0:3]
-    triggerfile = "/tmp/rivnan/current_"+mybase+".txt"
+    print("***********************************************************In GetLogLines with a watchtab of: ",watchtab)
+    
+
+    #loc_data.clear()
+    loc_data = []
+    loc_data.clear()
+
+    match watchtab:
+        case 't1':
+             locmylog = t1_mylog
+             print("matched t1, locmylog should show this: ", locmylog)
+        case 't2':
+             locmylog = t2_mylog
+             print("matched t2, locmylog should show this: ", locmylog)
+        case 't3':
+             locmylog = t3_mylog
+             print("matched t3, locmylog should show this: ", locmylog)
+        case _:
+            locmylog = t1_mylog
+    print("locmylog is now: ",locmylog)
+
+
+    loc_mybase = locmylog[0:3]
+    loc_triggerfile = "/tmp/rivnan/current_"+loc_mybase+".txt"
 
 
     stmt = text('''SELECT LOG_LINES.START_TIME, LOG_LINES.TRANS_TYPE, LOG_LINES.CART_NUMBER, CART.GROUP_NAME, CART.AVERAGE_LENGTH, CART.TITLE, CART.ARTIST, CART.ALBUM, LOG_LINES.SOURCE, LOG_LINES.COUNT, LOG_LINES.LINE_ID, LOG_LINES.TYPE, CART.TYPE from LOG_LINES INNER JOIN CART WHERE LOG_LINES.CART_NUMBER = CART.NUMBER AND LOG_LINES.LOG_NAME LIKE :x ORDER BY LOG_LINES.COUNT ASC''')
-    stmt = stmt.bindparams(x=mylog)
+    stmt = stmt.bindparams(x=locmylog)
     #print("in GetLogLines, stmt is now: ", stmt)
     
     r_set=my_conn.execute(stmt)
@@ -190,40 +228,105 @@ def GetLogLines():
         myavglen = FixAvgLen(dt[4])
 
 #        logrow = [dt[0],dt[1],dt[2],dt[3],dt[4],dt[5],dt[6]]
-        logrow = [dt[0],dt[1],dt[2],dt[3],myavglen,dt[5],dt[6],dt[7],dt[8],dt[9],dt[10],dt[11],dt[12],dt[4]]
+        loc_logrow = [dt[0],dt[1],dt[2],dt[3],myavglen,dt[5],dt[6],dt[7],dt[8],dt[9],dt[10],dt[11],dt[12],dt[4]]
         #print("Logrow is now: ", logrow)
-        data.append(logrow)
+        loc_data.append(loc_logrow)
         pass
-    #print("in GetLogLines, after select, data is now: ", data)
+    print("in GetLogLines, after select, data is now: ", loc_data)
     my_conn.close()
+    return loc_data
 
-GetLogLines()
+t1_data = GetLogLines('t1')
+t2_data = GetLogLines('t2')
+t3_data = GetLogLines('t3')
+print("t1_data is now: ", t1_data)
+print("t2_data is now: ", t2_data)
+print("t3_data is now: ", t3_data)
 
 
-block_4 = [
-            [ sg.Text('Choose Log Machine / Running Log'), sg.Text('', key='_OUTPUT_')],
-            [sg.Combo(names, font=('Arial Bold', 14),  key='logchoice', enable_events=True,  readonly=False)],
-            [sg.Table(values=data, headings=header_list,
+t1_block_4 = [
+            [ sg.Text('Choose Log Machine / Running Log'), sg.Text('', key='_t1_OUTPUT_')],
+            [sg.Combo(names, font=('Arial Bold', 14),  key='t1_logchoice', enable_events=True,  readonly=False)],
+            [sg.Table(values=t1_data, headings=header_list,
                       auto_size_columns=True,
                       display_row_numbers=True,
-                      justification='left', key='_table_',
+                      justification='left', key='_t1_table_',
                       selected_row_colors='red on yellow',
                       vertical_scroll_only = False,
                       enable_events=True,
                       expand_x=True,
                       expand_y=True,
                       enable_click_events=True,
-                      num_rows=min(25, len(data))
+                      num_rows=min(25, len(t1_data))
                       )
              ],
             #[sg.Text('Riv New Airplay Watching Log %s' % vals1[0])],
             
-            [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_MYLOG_')],
+            [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_t1_MYLOG_')],
             #[sg.Text(vals1[0])],
-            [sg.Text('', key='_OUTPUT1_')]
+            [sg.Text('', key='_t1_OUTPUT1_')]
         ]
 
 
+t2_block_4 = [
+            [ sg.Text('Choose Log Machine / Running Log'), sg.Text('', key='_t2_OUTPUT_')],
+            [sg.Combo(names, font=('Arial Bold', 14),  key='t2_logchoice', enable_events=True,  readonly=False)],
+            [sg.Table(values=t2_data, headings=header_list,
+                      auto_size_columns=True,
+                      display_row_numbers=True,
+                      justification='left', key='_t2_table_',
+                      selected_row_colors='red on yellow',
+                      vertical_scroll_only = False,
+                      enable_events=True,
+                      expand_x=True,
+                      expand_y=True,
+                      enable_click_events=True,
+                      num_rows=min(25, len(t2_data))
+                      )
+             ],
+            #[sg.Text('Riv New Airplay Watching Log %s' % vals1[0])],
+            
+            [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_t2_MYLOG_')],
+            #[sg.Text(vals1[0])],
+            [sg.Text('', key='_t2_OUTPUT1_')]
+        ]
+
+
+t3_block_4 = [
+            [ sg.Text('Choose Log Machine / Running Log'), sg.Text('', key='_t3_OUTPUT_')],
+            [sg.Combo(names, font=('Arial Bold', 14),  key='t3_logchoice', enable_events=True,  readonly=False)],
+            [sg.Table(values=t3_data, headings=header_list,
+                      auto_size_columns=True,
+                      display_row_numbers=True,
+                      justification='left', key='_t3_table_',
+                      selected_row_colors='red on yellow',
+                      vertical_scroll_only = False,
+                      enable_events=True,
+                      expand_x=True,
+                      expand_y=True,
+                      enable_click_events=True,
+                      num_rows=min(25, len(t3_data))
+                      )
+             ],
+            #[sg.Text('Riv New Airplay Watching Log %s' % vals1[0])],
+            
+            [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_t3_MYLOG_')],
+            #[sg.Text(vals1[0])],
+            [sg.Text('', key='_t3_OUTPUT1_')]
+        ]
+
+
+tab1_layout = t1_block_4
+
+tab2_layout = t2_block_4
+
+tab3_layout = t3_block_4
+
+tabgrp1_layout = [[sg.TabGroup([[sg.Tab('Log Control 1', tab1_layout, background_color='tan1', key='-mykey-'),
+                         sg.Tab('Log Control 2', tab2_layout, background_color='tan1'),
+                         sg.Tab('Log Control 3', tab3_layout, background_color='tan1')]],
+                       key='-group1-', title_color='red',
+                       selected_title_color='green', tab_location='bottom')]]
 
 
 
@@ -308,12 +411,6 @@ top  = [[sg.Push(), sg.Text('Check Paradise Island Cam https://www.paradiseislan
             [sg.T('This Frame has a relief while the others do not')],
             [sg.T('This window is resizable (see that sizegrip in the bottom right?)')]]
 
-#sg.theme('DarkGrey4')
-
-
-
-
-
 
 block_2 = [
             [cart_frame1('CTYP', 0, 'MUSIC', '14:31:12.0', "0:00", 'ttyp', "That Song1", "Bob's Yer Uncle1", 10000, 0, 10000)],
@@ -334,7 +431,8 @@ layout_frame1 = [
 ]
 
 #layout_frame2 = [[blank_framex('bfa')]]
-layout_frame2 = block_4
+#layout_frame2 = block_4
+layout_frame2 = tabgrp1_layout
 
 layout = [
     [sg.Frame('f1', top_banner,   pad=(0,0), background_color=DARK_HEADER_COLOR, expand_x=True, border_width=0, grab=True)],
@@ -350,8 +448,12 @@ window = sg.Window('RDnAirPlay', layout, size=(1400, 900), margins=(0,0), backgr
 window.finalize()
 #rcolumn.expand(True, True)
 progress_bar = window['-PBAR-']
-myoldloginfo=''
-myloginfo=''
+t1_myoldloginfo=''
+t1_myloginfo=''
+t2_myoldloginfo=''
+t2_myloginfo=''
+t3_myoldloginfo=''
+t3_myloginfo=''
 while True:             # Event Loop
     event, values = window.read(timeout=1000, timeout_key='timeout')
     print("event | values is ", event, " | ", values)
@@ -367,32 +469,35 @@ while True:             # Event Loop
         # def cart_frame1(c_type, cartnum, cgroup, cstart, cavglen, cttype, carttitle, cartartist, msecs):
         #
         #print("Reached a Timeout!")
-        myoldloginfo = myloginfo
-        myloginfo = GetCartLine()
-        if myoldloginfo != myloginfo :
+
+
+
+        t1_myoldloginfo = t1_myloginfo
+        t1_myloginfo = GetCartLine('t1')
+        if t1_myoldloginfo != t1_myloginfo :
             myisrunning = True
             mycartstart = time.time()
             mycartelapse = 0            
             #print("myloginfo changed:", myoldloginfo, " to ", myloginfo)
-            zfcart1 = int(myloginfo[0])
+            zfcart1 = int(t1_myloginfo[0])
             #print("zfcart1 is: ", zfcart1)
             #print(data[zfcart1])
             #window['_cf1-num_'].update(zfcart1)
-            zflogline1 = int(myloginfo[1])
+            zflogline1 = int(t1_myloginfo[1])
             #print("zflogline1 is: ",zflogline1)
             # str(timedelta(seconds=elapsed))
             #print("starttime number: ", (data[zflogline1][0]/1000))
             #zfcstart1 = str(datetime.timedelta((data[zflogline1][0]/1000)))
             # tvar = (time.strftime("%H:%M:%S.{}".format(str(elapsed % 1)[2:])[:15], time.gmtime(elapsed)))
-            zcst1 = (data[zflogline1][0]/1000)
+            zcst1 = (t1_data[zflogline1][0]/1000)
             zfcstart1 = (time.strftime("%H:%M:%S.{}".format(str((zcst1) % 1)[2:])[:15], time.gmtime(zcst1)))
-            zftitle1 = data[zflogline1][5]
-            zfartist1 = data[zflogline1][6]
-            zfavglen1 = data[zflogline1][4]
-            zfmsecs1 = data[zflogline1][13]
-            zfcarttype1 = mycarttypes.get(data[zflogline1][12], 'S')
+            zftitle1 = t1_data[zflogline1][5]
+            zfartist1 = t1_data[zflogline1][6]
+            zfavglen1 = t1_data[zflogline1][4]
+            zfmsecs1 = t1_data[zflogline1][13]
+            zfcarttype1 = mycarttypes.get(t1_data[zflogline1][12], 'S')
             #print("transtype number is: ", data[zflogline1][1])
-            zftranstype1 = mytranstypes.get(data[zflogline1][1], 'Oops')
+            zftranstype1 = mytranstypes.get(t1_data[zflogline1][1], 'Oops')
             window['_cf1-ctp_'].update(zfcarttype1)
             window['_cf1-ttp_'].update(zftranstype1)
             window['_cf1-num_'].update(zfcart1)
@@ -410,14 +515,14 @@ while True:             # Event Loop
             
             #========================================================
             zflogline2 = zflogline1+1
-            zfcart2 = data[zflogline2][2]
-            zcst2 = (data[zflogline2][0]/1000)
+            zfcart2 = t1_data[zflogline2][2]
+            zcst2 = (t1_data[zflogline2][0]/1000)
             zfcstart2 = (time.strftime("%H:%M:%S.{}".format(str((zcst2) % 1)[2:])[:15], time.gmtime(zcst2)))
-            zftitle2 = data[zflogline2][5]
-            zfartist2 = data[zflogline2][6]
-            zfavglen2 = data[zflogline2][4]
-            zfmsecs2 = data[zflogline2][13]
-            zfcarttype2 = mycarttypes.get(data[zflogline2][12], 'S')
+            zftitle2 = t1_data[zflogline2][5]
+            zfartist2 = t1_data[zflogline2][6]
+            zfavglen2 = t1_data[zflogline2][4]
+            zfmsecs2 = t1_data[zflogline2][13]
+            zfcarttype2 = mycarttypes.get(t1_data[zflogline2][12], 'S')
             window['_cf2-ctp_'].update(zfcarttype2)
             #print("zfcart is: ", zfcart2)
             window['_cf2-ctp_'].update(zfcarttype2)
@@ -429,14 +534,14 @@ while True:             # Event Loop
             window['_cf2-cst_'].update(zfcstart2)
             #========================================================
             zflogline3 = zflogline1+2
-            zfcart3 = data[zflogline3][2]
-            zcst3 = (data[zflogline3][0]/1000)
+            zfcart3 = t1_data[zflogline3][2]
+            zcst3 = (t1_data[zflogline3][0]/1000)
             zfcstart3 = (time.strftime("%H:%M:%S.{}".format(str((zcst3) % 1)[2:])[:15], time.gmtime(zcst3)))
-            zftitle3 = data[zflogline3][5]
-            zfartist3 = data[zflogline3][6]
-            zfavglen3 = data[zflogline3][4]
-            zfmsecs3 = data[zflogline3][13]
-            zfcarttype3 = mycarttypes.get(data[zflogline3][12], 'S')
+            zftitle3 = t1_data[zflogline3][5]
+            zfartist3 = t1_data[zflogline3][6]
+            zfavglen3 = t1_data[zflogline3][4]
+            zfmsecs3 = t1_data[zflogline3][13]
+            zfcarttype3 = mycarttypes.get(t1_data[zflogline3][12], 'S')
             window['_cf3-ctp_'].update(zfcarttype3)
             window['_cf3-num_'].update(zfcart3)
             window['_cf3-tit_'].update(zftitle3)
@@ -446,25 +551,25 @@ while True:             # Event Loop
             window['_cf3-cst_'].update(zfcstart3)
             #========================================================
             zflogline4 = zflogline1+3
-            zfcart4 = data[zflogline4][2]
-            zftitle4 = data[zflogline4][5]
-            zfartist4 = data[zflogline4][6]
+            zfcart4 = t1_data[zflogline4][2]
+            zftitle4 = t1_data[zflogline4][5]
+            zfartist4 = t1_data[zflogline4][6]
             window['_cf4-num_'].update(zfcart4)
             window['_cf4-tit_'].update(zftitle4)
             window['_cf4-art_'].update(zfartist4)
             #========================================================
             zflogline5 = zflogline1+4
-            zfcart5 = data[zflogline5][2]
-            zftitle5 = data[zflogline5][5]
-            zfartist5 = data[zflogline5][6]
+            zfcart5 = t1_data[zflogline5][2]
+            zftitle5 = t1_data[zflogline5][5]
+            zfartist5 = t1_data[zflogline5][6]
             window['_cf5-num_'].update(zfcart5)
             window['_cf5-tit_'].update(zftitle5)
             window['_cf5-art_'].update(zfartist5)
             #========================================================
             zflogline6 = zflogline1+5
-            zfcart6 = data[zflogline6][2]
-            zftitle6 = data[zflogline6][5]
-            zfartist6 = data[zflogline6][6]
+            zfcart6 = t1_data[zflogline6][2]
+            zftitle6 = t1_data[zflogline6][5]
+            zfartist6 = t1_data[zflogline6][6]
             window['_cf6-num_'].update(zfcart6)
             window['_cf6-tit_'].update(zftitle6)
             window['_cf6-art_'].update(zfartist6)
@@ -492,59 +597,212 @@ while True:             # Event Loop
             
 
         #print("============================in gettime - Here comes myloginfo: ", myloginfo)
-        zfcart = str(myloginfo[0])
-        zflogline = str(myloginfo[1])
+        zfcart = str(t1_myloginfo[0])
+        zflogline = str(t1_myloginfo[1])
         #print("zflogline is currently: ", zflogline)
-        window["_OUTPUT1_"].update(zflogline)
+        window["_t1_OUTPUT1_"].update(zflogline)
         #win2["_table_"].Widget.see(int(zflogline))
         if int(zflogline) > 31:
-            window["_table_"].Widget.yview_moveto(((int(zflogline)-15)/len(data)))
+            window["_t1_table_"].Widget.yview_moveto(((int(zflogline)-15)/len(t1_data)))
         else:
-            window["_table_"].Widget.yview_moveto((int(zflogline)/len(data)))
+            window["_t1_table_"].Widget.yview_moveto((int(zflogline)/len(t1_data)))
         #win2['_table_'].update(select_rows = [int(zflogline)])
-        if init_colors:
+        if t1_init_colors:
             # set up colors of rows already played
             row_col_list = []
             for crow in range(int(zflogline)):
                 #
                 #row_colors = ((5, 'white', 'blue'), (0,'red'), (15,'yellow'))
                 row_col_list.append((crow, 'DarkGray'))
-            init_colors = False
+            t1_init_colors = False
         cur_col_list = []
         cur_col_list.append((int(zflogline), 'white', 'green'))
         #lst_col_list = []
         row_col_list.append(((int(zflogline)-1), 'DarkGray'))
-        window['_table_'].update(row_colors=(cur_col_list))
-        window['_table_'].update(row_colors=(row_col_list))
+        window['_t1_table_'].update(row_colors=(cur_col_list))
+        window['_t1_table_'].update(row_colors=(row_col_list))
         #print("Reached a Timeout!")
+
+# -------------------------------------------------------------------------------------------------
+
+
+
+        t2_myoldloginfo = t2_myloginfo
+        t2_myloginfo = GetCartLine('t2')
+        if t2_myoldloginfo != t2_myloginfo :
+            #myisrunning = True
+            #mycartstart = time.time()
+            #mycartelapse = 0            
+            #print("myloginfo changed:", myoldloginfo, " to ", myloginfo)
+            t2_zfcart1 = int(t2_myloginfo[0])
+            #print("zfcart1 is: ", zfcart1)
+            #print(data[zfcart1])
+            #window['_cf1-num_'].update(zfcart1)
+            t2_zflogline1 = int(t2_myloginfo[1])
+            #print("zflogline1 is: ",zflogline1)
+            # str(timedelta(seconds=elapsed))
+            #print("starttime number: ", (data[zflogline1][0]/1000))
+            #zfcstart1 = str(datetime.timedelta((data[zflogline1][0]/1000)))
+            # tvar = (time.strftime("%H:%M:%S.{}".format(str(elapsed % 1)[2:])[:15], time.gmtime(elapsed)))
+
+
+            #========================================================
+        else:
+            pass
+            
+
+        #print("============================in gettime - Here comes myloginfo: ", myloginfo)
+        t2_zfcart = str(t2_myloginfo[0])
+        t2_zflogline = str(t2_myloginfo[1])
+        #print("zflogline is currently: ", zflogline)
+        window["_t2_OUTPUT1_"].update(t2_zflogline)
+        #win2["_table_"].Widget.see(int(zflogline))
+        if int(t2_zflogline) > 31:
+            window["_t2_table_"].Widget.yview_moveto(((int(t2_zflogline)-15)/len(t2_data)))
+        else:
+            window["_t2_table_"].Widget.yview_moveto((int(t2_zflogline)/len(t2_data)))
+        #win2['_table_'].update(select_rows = [int(zflogline)])
+        if t2_init_colors:
+            # set up colors of rows already played
+            t2_row_col_list = []
+            for t2_crow in range(int(t2_zflogline)):
+                #
+                #row_colors = ((5, 'white', 'blue'), (0,'red'), (15,'yellow'))
+                t2_row_col_list.append((t2_crow, 'DarkGray'))
+            t2_init_colors = False
+        t2_cur_col_list = []
+        t2_cur_col_list.append((int(t2_zflogline), 'white', 'green'))
+        #lst_col_list = []
+        t2_row_col_list.append(((int(t2_zflogline)-1), 'DarkGray'))
+        window['_t2_table_'].update(row_colors=(t2_cur_col_list))
+        window['_t2_table_'].update(row_colors=(t2_row_col_list))
+        #print("Reached a Timeout!")
+
+
+# .............................................................................................
+
+        t3_myoldloginfo = t3_myloginfo
+        t3_myloginfo = GetCartLine('t3')
+        if t3_myoldloginfo != t3_myloginfo :
+            #myisrunning = True
+            #mycartstart = time.time()
+            #mycartelapse = 0            
+            #print("myloginfo changed:", myoldloginfo, " to ", myloginfo)
+            t3_zfcart1 = int(t3_myloginfo[0])
+            #print("zfcart1 is: ", zfcart1)
+            #print(data[zfcart1])
+            #window['_cf1-num_'].update(zfcart1)
+            t3_zflogline1 = int(t3_myloginfo[1])
+            #print("zflogline1 is: ",zflogline1)
+            # str(timedelta(seconds=elapsed))
+            #print("starttime number: ", (data[zflogline1][0]/1000))
+            #zfcstart1 = str(datetime.timedelta((data[zflogline1][0]/1000)))
+            # tvar = (time.strftime("%H:%M:%S.{}".format(str(elapsed % 1)[2:])[:15], time.gmtime(elapsed)))
+
+
+            #========================================================
+        else:
+            pass
+            
+
+        #print("============================in gettime - Here comes myloginfo: ", myloginfo)
+        t3_zfcart = str(t3_myloginfo[0])
+        t3_zflogline = str(t3_myloginfo[1])
+        #print("zflogline is currently: ", zflogline)
+        window["_t3_OUTPUT1_"].update(t3_zflogline)
+        #win2["_table_"].Widget.see(int(zflogline))
+        if int(t3_zflogline) > 31:
+            window["_t3_table_"].Widget.yview_moveto(((int(t3_zflogline)-15)/len(t3_data)))
+        else:
+            window["_t3_table_"].Widget.yview_moveto((int(t3_zflogline)/len(t3_data)))
+        #win2['_table_'].update(select_rows = [int(zflogline)])
+        if t3_init_colors:
+            # set up colors of rows already played
+            t3_row_col_list = []
+            for t3_crow in range(int(t3_zflogline)):
+                #
+                #row_colors = ((5, 'white', 'blue'), (0,'red'), (15,'yellow'))
+                t3_row_col_list.append((t3_crow, 'DarkGray'))
+            t3_init_colors = False
+        t3_cur_col_list = []
+        t3_cur_col_list.append((int(t3_zflogline), 'white', 'green'))
+        #lst_col_list = []
+        t3_row_col_list.append(((int(t3_zflogline)-1), 'DarkGray'))
+        window['_t3_table_'].update(row_colors=(t3_cur_col_list))
+        window['_t3_table_'].update(row_colors=(t3_row_col_list))
+        #print("Reached a Timeout!")
+
+
+# ------------------------------------------------------------------------------------------------
+
 
     if (event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or event == 'Exit') and sg.popup_yes_no('Do you really want to exit RDnAirPlay?') == 'Yes':
         break
-    elif event == 'Edit Me':
-        sg.execute_editor(__file__)
-    elif event == 'Version':
-        sg.popup_scrolled(sg.get_versions(), keep_on_top=True)
-    elif event == 'File Location':
-        sg.popup_scrolled('This Python file is:', __file__)
-    elif event == 'logchoice':
+    elif event == 't1_logchoice':
         # NOTE: As of now, when we first begin monitoring a log, the system does not know how far along the playback of the initial cart is.
         # The progress bar/etc. will be messed up until we change to the next song.
         # Also, the time elapsed, time remaining, and progress bar are approximations / guesses. There is no communication between caed, etc. and this system
-        myoldloginfo=''
-        myloginfo=''
+        t1_myoldloginfo=''
+        t1_myloginfo=''
         #print('0 event')
         #print("values is now: ", values)
         #GetLogLines()
-        init_colors = True
+        t1_init_colors = True
         #print("mylog is now: ", mylog)
-        mylog = values['logchoice']
-        #print("mylog is now: ", mylog)
-        mybase = mylog[0:3]
-        #print("mybase is now: ", mybase)
-        triggerfile = "/tmp/rivnan/current_"+mybase+".txt"
-        GetLogLines()
-        window['_table_'].update(values=data)
-        window['_MYLOG_'].update(mylog)
+        t1_mylog = values['t1_logchoice']
+        print("t1_mylog is now: ", t1_mylog)
+        t1_mybase = t1_mylog[0:3]
+        print("t1_mybase is now: ", t1_mybase)
+        t1_triggerfile = "/tmp/rivnan/current_"+t1_mybase+".txt"
+        
+        t1_data = GetLogLines('t1')
+        window['_t1_table_'].update(values=t1_data)
+        window['_t1_MYLOG_'].update(t1_mylog)
         #window['_OUTPUT_'].update(vals1[0])
+    elif event == 't2_logchoice':
+        # NOTE: As of now, when we first begin monitoring a log, the system does not know how far along the playback of the initial cart is.
+        # The progress bar/etc. will be messed up until we change to the next song.
+        # Also, the time elapsed, time remaining, and progress bar are approximations / guesses. There is no communication between caed, etc. and this system
+        t2_myoldloginfo=''
+        t2_myloginfo=''
+        #print('0 event')
+        #print("values is now: ", values)
+        #GetLogLines()
+        t2_init_colors = True
+        #print("mylog is now: ", mylog)
+        t2_mylog = values['t2_logchoice']
+        print("t2_mylog is now: ", t2_mylog)
+        t2_mybase = t2_mylog[0:3]
+        print("t2_mybase is now: ", t2_mybase)
+        t2_triggerfile = "/tmp/rivnan/current_"+t2_mybase+".txt"
+        t2_data = GetLogLines('t2')
+        window['_t2_table_'].update(values=t2_data)
+        window['_t2_MYLOG_'].update(t2_mylog)
+    elif event == 't3_logchoice':
+        # NOTE: As of now, when we first begin monitoring a log, the system does not know how far along the playback of the initial cart is.
+        # The progress bar/etc. will be messed up until we change to the next song.
+        # Also, the time elapsed, time remaining, and progress bar are approximations / guesses. There is no communication between caed, etc. and this system
+        t3_myoldloginfo=''
+        t3_myloginfo=''
+        #print('0 event')
+        #print("values is now: ", values)
+        #GetLogLines()
+        t3_init_colors = True
+        #print("mylog is now: ", mylog)
+        t3_mylog = values['t3_logchoice']
+        print("t3_mylog is now: ", t3_mylog)
+        t3_mybase = t3_mylog[0:3]
+        print("t3_mybase is now: ", t3_mybase)
+        t3_triggerfile = "/tmp/rivnan/current_"+t3_mybase+".txt"
+        t3_data = GetLogLines('t3')
+        window['_t3_table_'].update(values=t3_data)
+        window['_t3_MYLOG_'].update(t3_mylog)
+
+
+
+
+
+
+
 my_db.dispose()
 window.close()
