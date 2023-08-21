@@ -1,9 +1,15 @@
 #!/usr/bin/python
 
-# rivnairplay_psg_v004j.py
+# rivnairplay_psg_v004k.py
 
 
-version="v0.04j_psg"
+version="v0.04k_psg"
+
+
+# Note: LINE_ID < COUNT in table LOG_LINES
+#       LOG_ID < LOG_LINE in table LOG_MACHINES
+# Could we query the LOG_MACHINES table to get the equivalent of COUNT which we now get via
+# pypad "trickery"...
 
 import PySimpleGUI as sg
 import os
@@ -19,9 +25,20 @@ from sqlalchemy import text
 import configparser
 import random
 import string
+from dataclasses import dataclass
 
 
-#print("This is version: %s" % version)
+#@dataclass
+#class Point:
+#    x: float
+#    y: float
+#    z: float = 0.0
+#
+#p = Point(1.5, 2.5)
+#
+#print(p)  # Point(x=1.5, y=2.5, z=0.0)
+
+print("This is version: %s" % version)
 
 sg.theme('Light Blue 6')
 
@@ -49,12 +66,12 @@ mycarttypes = {1: 'A', 2: 'C', 3: 'S'}
 mytranstypes = {0: 'Play', 1: 'Segue', 2: 'Stop', 255: 'NoTrans'}
 
 args = len(sys.argv) - 1
-print ("The script was called with %i arguments" % (args))
+#print ("The script was called with %i arguments" % (args))
 if(args > 0):
-    print("The important parameter is %s." % (sys.argv[1]))
+    #print("The important parameter is %s." % (sys.argv[1]))
     mybase = sys.argv[1]
 else:
-    mybase = "VID"
+    mybase = "AP4"
 
 t1_mybase = mybase
 t2_mybase = mybase
@@ -77,7 +94,7 @@ t3_triggerfile = "/tmp/rivnan/current_"+t3_mybase+".txt"
 
 
 def GetCartLine(watchtab):
-
+    # this is a file watch where the file is updated by pypad filewrite macros.
     match watchtab:
         case 't1':
              loctriggerfile = t1_triggerfile
@@ -100,7 +117,9 @@ def GetCartLine(watchtab):
 
 global myisrunning
 myisrunning = False
-names = [] #creates a list to store the job names in
+names = [] #creates a list to store the lob names in
+lmachines = []
+llines = []
 global t1_init_colors
 global t2_init_colors
 global t3_init_colors
@@ -113,6 +132,53 @@ header_list = []
 header_list = ['StTime', 'TTyp', 'Cart', 'Group', 'ALen', 'Title', 'Artist', 'Album', 'Src', 'LnID', 'Count', 'LLT', 'CT', 'ALenMS']
 
 #toprow = ['S.No.', 'Name', 'Age', 'Marks']
+
+def GetLMLL(forlog):
+    print("Just entered GetMLLL............................")
+    my_connll = my_db.connect()
+    # for now, by swapping the comments on the 2 query lines below you can see all running log machines or
+    # just the virtual log machines.
+
+
+    #stmtll = text('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` LIKE :x''')
+    stmtll = text('''SELECT LOG_MACHINES.MACHINE, LOG_MACHINES.CURRENT_LOG, LOG_MACHINES.RUNNING, LOG_MACHINES.LOG_ID, LOG_MACHINES.LOG_LINE, LOG_LINES.CART_NUMBER, LOG_LINES.COUNT FROM LOG_MACHINES INNER JOIN LOG_LINES WHERE LOG_MACHINES.CURRENT_LOG LIKE LOG_LINES.LOG_NAME AND LOG_MACHINES.LOG_LINE LIKE LOG_LINES.COUNT AND LOG_MACHINES.CURRENT_LOG LIKE :x LIMIT 1''')
+    stmtll = stmtll.bindparams(x=forlog)
+    #print("in GetLogLines, stmt is now: ", stmt)
+    
+    c_setll=my_connll.execute(stmtll)
+
+
+
+
+
+
+    #c_setll=my_connll.execute('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` LIKE :x LIMIT 1''')
+    #c_set=my_conn.execute('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` > '' AND `MACHINE` > 99 ''')
+
+    print("c_setll is: ", c_setll)
+
+    #names = [] #creates a list to store the job names in
+
+    for cll in c_setll:
+        print("cll is now: ",cll)
+        #lmachines.append(cll[0])
+        #names.append(cll[1])
+        #llines.append(cll[4])
+        fcartll = cll[5]
+        floglinell = cll[4]
+
+    #var.set(a[0]) #sets the default option of options
+    #print("names is now: ", names)
+    #print("I found %s running logs." % len(names))
+    print("LOG_MACHINES.LOG_LINE is now: ", llines[0])
+    
+    my_connll.close()
+    return (fcartll, floglinell)
+
+
+
+
+
 
 def GetNewLogs():
     
@@ -127,7 +193,9 @@ def GetNewLogs():
     #names = [] #creates a list to store the job names in
 
     for c in c_set:
+        lmachines.append(c[2])
         names.append(c[6])
+        llines.append(c[9])
 
     #var.set(a[0]) #sets the default option of options
     #print("names is now: ", names)
@@ -136,6 +204,8 @@ def GetNewLogs():
 
 GetNewLogs()
 
+# below is just heree to test it, move when it workd and we know where it goes
+GetLMLL("AP1_2023_08_20")
 
 theme_dict = {'BACKGROUND': '#2B475D',
                 'TEXT': '#FFFFFF',
@@ -190,7 +260,7 @@ def FixSeconds(seconds):
 
 def GetLogLines(watchtab):
     my_conn = my_db.connect()
-    print("***********************************************************In GetLogLines with a watchtab of: ",watchtab)
+    #print("***********************************************************In GetLogLines with a watchtab of: ",watchtab)
     
 
     #loc_data.clear()
@@ -209,7 +279,7 @@ def GetLogLines(watchtab):
              print("matched t3, locmylog should show this: ", locmylog)
         case _:
             locmylog = t1_mylog
-    print("locmylog is now: ",locmylog)
+    #print("locmylog is now: ",locmylog)
 
 
     loc_mybase = locmylog[0:3]
@@ -232,16 +302,16 @@ def GetLogLines(watchtab):
         #print("Logrow is now: ", logrow)
         loc_data.append(loc_logrow)
         pass
-    print("in GetLogLines, after select, data is now: ", loc_data)
+    #print("in GetLogLines, after select, data is now: ", loc_data)
     my_conn.close()
     return loc_data
 
 t1_data = GetLogLines('t1')
 t2_data = GetLogLines('t2')
 t3_data = GetLogLines('t3')
-print("t1_data is now: ", t1_data)
-print("t2_data is now: ", t2_data)
-print("t3_data is now: ", t3_data)
+#print("t1_data is now: ", t1_data)
+#print("t2_data is now: ", t2_data)
+#print("t3_data is now: ", t3_data)
 
 
 t1_block_4 = [
@@ -264,7 +334,7 @@ t1_block_4 = [
             
             [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_t1_MYLOG_')],
             #[sg.Text(vals1[0])],
-            [sg.Text('', key='_t1_OUTPUT1_')]
+            [sg.Text('', key='_t1_OUTPUT1_'), sg.Text('', key='_t1_OUTPUTLL1_')]
         ]
 
 
@@ -326,7 +396,7 @@ tabgrp1_layout = [[sg.TabGroup([[sg.Tab('Log Control 1', tab1_layout, background
                          sg.Tab('Log Control 2', tab2_layout, background_color='tan1'),
                          sg.Tab('Log Control 3', tab3_layout, background_color='tan1')]],
                        key='-group1-', title_color='red',
-                       selected_title_color='green', tab_location='bottom')]]
+                       selected_title_color='green', selected_background_color='white', tab_location='topleft')]]
 
 
 
@@ -454,9 +524,15 @@ t2_myoldloginfo=''
 t2_myloginfo=''
 t3_myoldloginfo=''
 t3_myloginfo=''
+t1_myoldloginfoll=''
+t1_myloginfoll=''
+t2_myoldloginfoll=''
+t2_myloginfoll=''
+t3_myoldloginfoll=''
+t3_myloginfoll=''
 while True:             # Event Loop
     event, values = window.read(timeout=1000, timeout_key='timeout')
-    print("event | values is ", event, " | ", values)
+    #print("event | values is ", event, " | ", values)
     
     if event != 'timeout':
         #print(ev2)
@@ -474,16 +550,20 @@ while True:             # Event Loop
 
         t1_myoldloginfo = t1_myloginfo
         t1_myloginfo = GetCartLine('t1')
+        t1_myloginfoll = GetLMLL(t1_mylog)
         if t1_myoldloginfo != t1_myloginfo :
             myisrunning = True
             mycartstart = time.time()
             mycartelapse = 0            
             #print("myloginfo changed:", myoldloginfo, " to ", myloginfo)
             zfcart1 = int(t1_myloginfo[0])
+            zfcartll1 = int(t1_myloginfoll[0])
             #print("zfcart1 is: ", zfcart1)
             #print(data[zfcart1])
             #window['_cf1-num_'].update(zfcart1)
             zflogline1 = int(t1_myloginfo[1])
+            zfloglinell1 = int(t1_myloginfoll[1])
+            #GetLMLL("AP1_2023_08_20")
             #print("zflogline1 is: ",zflogline1)
             # str(timedelta(seconds=elapsed))
             #print("starttime number: ", (data[zflogline1][0]/1000))
@@ -599,8 +679,12 @@ while True:             # Event Loop
         #print("============================in gettime - Here comes myloginfo: ", myloginfo)
         zfcart = str(t1_myloginfo[0])
         zflogline = str(t1_myloginfo[1])
+        zfcartll = str(t1_myloginfoll[0])
+        zfloglinell = str(t1_myloginfoll[1])
         #print("zflogline is currently: ", zflogline)
-        window["_t1_OUTPUT1_"].update(zflogline)
+        window["_t1_OUTPUT1_"].update("pp:z "+zflogline+" pp:cart "+zfcart)
+        #window["_t1_OUTPUT1_"].update("pp ",zflogline)
+        window["_t1_OUTPUTLL1_"].update("db:ll "+zfloglinell+" db:cart "+zfcartll)
         #win2["_table_"].Widget.see(int(zflogline))
         if int(zflogline) > 31:
             window["_t1_table_"].Widget.yview_moveto(((int(zflogline)-15)/len(t1_data)))
@@ -750,9 +834,9 @@ while True:             # Event Loop
         t1_init_colors = True
         #print("mylog is now: ", mylog)
         t1_mylog = values['t1_logchoice']
-        print("t1_mylog is now: ", t1_mylog)
+        #print("t1_mylog is now: ", t1_mylog)
         t1_mybase = t1_mylog[0:3]
-        print("t1_mybase is now: ", t1_mybase)
+        #print("t1_mybase is now: ", t1_mybase)
         t1_triggerfile = "/tmp/rivnan/current_"+t1_mybase+".txt"
         
         t1_data = GetLogLines('t1')
@@ -771,9 +855,9 @@ while True:             # Event Loop
         t2_init_colors = True
         #print("mylog is now: ", mylog)
         t2_mylog = values['t2_logchoice']
-        print("t2_mylog is now: ", t2_mylog)
+        #print("t2_mylog is now: ", t2_mylog)
         t2_mybase = t2_mylog[0:3]
-        print("t2_mybase is now: ", t2_mybase)
+        #print("t2_mybase is now: ", t2_mybase)
         t2_triggerfile = "/tmp/rivnan/current_"+t2_mybase+".txt"
         t2_data = GetLogLines('t2')
         window['_t2_table_'].update(values=t2_data)
@@ -790,9 +874,9 @@ while True:             # Event Loop
         t3_init_colors = True
         #print("mylog is now: ", mylog)
         t3_mylog = values['t3_logchoice']
-        print("t3_mylog is now: ", t3_mylog)
+        #print("t3_mylog is now: ", t3_mylog)
         t3_mybase = t3_mylog[0:3]
-        print("t3_mybase is now: ", t3_mybase)
+        #print("t3_mybase is now: ", t3_mybase)
         t3_triggerfile = "/tmp/rivnan/current_"+t3_mybase+".txt"
         t3_data = GetLogLines('t3')
         window['_t3_table_'].update(values=t3_data)
