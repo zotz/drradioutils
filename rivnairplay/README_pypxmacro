@@ -1,0 +1,21 @@
+# Going to try and work like this
+######PX mach cart [offset] [PLAY|SEGUE|STOP]!
+
+So, this is intended to work with loaded and running logs.
+
+It is supposed to give a similar/identical result to 
+
+PX mach cart [offset] [PLAY|SEGUE|STOP]
+
+when invoked like this for example:
+
+./pypxmacro.py 0 999999 7 SEGUE
+
+0 is the machine
+999999 is the cart (test tone)
+7 is the offset,
+SEGUE is the transition type.
+
+I likely need lots of help. Testing, and some python regular expression help would probably go a long way.
+
+Oh, I think this will only work if the loaded log is set to auto refresh.
