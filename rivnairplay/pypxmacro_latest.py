@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-# pypxmacro.py
+# pypxmacro_v000a.py
 
-version="v0.00"
+version="v0.00a"
 
 import os
 from tkinter import *
@@ -24,6 +24,14 @@ print("This is version: %s" % version)
 # Going to try and work like this
 ######PX mach cart [offset] [PLAY|SEGUE|STOP]!
 
+#        settrans {line} {play|segue|stop}
+#           Set the transition type for a log event.
+
+#       addcart {line} {cart-num}
+#           Add a new cart event before line line using cart cart-num.
+
+# Oops, can't addcart with transtype, 2 step process.
+# how to know which line to change after adding. TEST.
 
 config = configparser.ConfigParser()
 config.read('/etc/rd.conf')
@@ -108,8 +116,8 @@ myloginfo = GetLMData(mymach)
 print("myloginfo is now: ", myloginfo)
 
 
-def DoExpect(log,line,cart,seg):
-    print("In DoExpect with this data: ", log,line,cart,seg)
+def DoExpect(log,line,cart,ttype):
+    print("In DoExpect with this data: ", log,line,cart,ttype)
     child = pexpect.spawn('rdclilogedit\r')
     child.expect("logedit>")
     #print(f'log list is : {output.decode("utf-8")}')
@@ -117,11 +125,20 @@ def DoExpect(log,line,cart,seg):
     print(llogcmd)
     child.sendline(llogcmd)
     child.expect("]>")
-    adcartcmd = 'addcart '+str(line)+' '+str(cart)+' '+seg
+    addcartcmd = 'addcart '+str(line)+' '+str(cart)
+    print("addcartcmd is now: ",addcartcmd)
     #child.sendline('addcart 7 999999')
-    child.sendline(adcartcmd)
+    child.sendline(addcartcmd)
     child.expect("]>")
     output = child.before
+    print("ttype is "+str(len(ttype))+" characters long.")
+    if len(ttype) > 3 and len(ttype) < 6:
+        print(str(len(ttype))+" should be between 3 and 6.")
+        settranscmd = 'settrans '+str(line)+' '+str(ttype)
+        print("settranscmd should be set to: ", settranscmd)
+        child.sendline(settranscmd)
+        child.expect("]>")
+        output = child.before
     #print(f'log list is : {output.decode("utf-8")}')
 
 
