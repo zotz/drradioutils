@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=LXRandR autostart
+Comment=Start xrandr with settings done in LXRandR
+Exec=sh -c 'xrandr --output DP-2 --mode 1024x768'
+#Exec=sh -c 'xrandr --fb 1920x1080'
+OnlyShowIn=LXDE
