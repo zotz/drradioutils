@@ -1,0 +1,9 @@
+rd	ALL=NOPASSWD:	/root/runglassnano.sh
+rd	ALL=NOPASSWD:	/root/runglasscoder.sh
+rd	ALL=NOPASSWD:	/root/restartgc.sh
+rd	ALL=NOPASSWD:	/root/restartriv.sh
+rd	ALL=NOPASSWD:	/home/rd/gettemp1.py
+rd	ALL=NOPASSWD:	/home/rd/findips.sh
+rd	ALL=NOPASSWD:	/root/musiconly.sh
+rivendell	ALL=(rd) NOPASSWD: /usr/local/bin/yessound.sh
+rivendell	ALL=(rd) NOPASSWD: /usr/local/bin/nosound.sh
