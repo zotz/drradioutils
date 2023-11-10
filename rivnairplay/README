@@ -1,5 +1,5 @@
 README for first efforts at a "new" rdairplay called for now rdnairplay. Newer notes at bottom.
-August 09/2023
+November 10/2023
 
 Right now this is in python.
 It is dirty code.
@@ -41,3 +41,5 @@ Append=0
 FormatString=:%n:%x:\n
 
 I am changing the example pypad files to match the new naming convention.
+
+Addred rivcartplays_latest.py - see play counts for carts
