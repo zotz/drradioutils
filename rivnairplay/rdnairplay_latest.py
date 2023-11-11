@@ -1,15 +1,13 @@
 #!/usr/bin/python
 
+# rivnairplay_psg_v005.py
+# from
+# rivnairplay_psg_v004j.py
+# jumped back over 
 # rivnairplay_psg_v004k.py
+# incorporates a cartplays tab
 
-
-version="v0.04k_psg"
-
-
-# Note: LINE_ID < COUNT in table LOG_LINES
-#       LOG_ID < LOG_LINE in table LOG_MACHINES
-# Could we query the LOG_MACHINES table to get the equivalent of COUNT which we now get via
-# pypad "trickery"...
+version="v0.05_psg"
 
 import PySimpleGUI as sg
 import os
@@ -25,21 +23,13 @@ from sqlalchemy import text
 import configparser
 import random
 import string
-from dataclasses import dataclass
+import operator
+from operator import itemgetter
 
 
-#@dataclass
-#class Point:
-#    x: float
-#    y: float
-#    z: float = 0.0
-#
-#p = Point(1.5, 2.5)
-#
-#print(p)  # Point(x=1.5, y=2.5, z=0.0)
+#print("This is version: %s" % version)
 
-print("This is version: %s" % version)
-
+#sg.theme('Light green 6')
 sg.theme('Light Blue 6')
 
 config = configparser.ConfigParser()
@@ -54,6 +44,30 @@ dbdbase = config['mySQL']['Database']
 #my_conn = create_engine("mysql+mysqldb://%s:%s@localhost/Rivendell" % (dbuser, dbpw))
 my_db = create_engine("mysql+mysqldb://%s:%s@%s/%s" % (dbuser, dbpw, dbhost, dbdbase))
 
+today = datetime.datetime.now()
+mydate = today.strftime('_%Y_%m_%d')
+mydate1 = today.strftime('%d %B, %Y')
+
+mynumcarts = 30000
+mygroup = "MUSIC"
+mycartorderopts = ['CUTS.PLAY_COUNTER', 'CART.TITLE', 'CART.ARTIST', 'CUTS.CUT_NAME']
+mycartorder = "CUTS.PLAY_COUNTER"
+mylastcol = 0
+myreverse = True
+
+
+
+
+names = [] #creates a list to store the job names in
+groups = []
+global init_colors
+init_colors = True
+data = []
+header_list = []
+# Creates columns names for each column ('column0', 'column1', etc)
+header_list = ['Count', 'Cart Number', 'Title', 'Artist', 'Album', 'Line ID', 'Avg Len', 'Start Time']
+pheader_list = ['Plays', 'Title', 'Artist', 'Cut Name', 'Cart Number', 'Group']
+
 
 #choices = {'a': 1, 'b': 2}
 #result = choices.get(key, 'default')
@@ -66,12 +80,12 @@ mycarttypes = {1: 'A', 2: 'C', 3: 'S'}
 mytranstypes = {0: 'Play', 1: 'Segue', 2: 'Stop', 255: 'NoTrans'}
 
 args = len(sys.argv) - 1
-#print ("The script was called with %i arguments" % (args))
+print ("The script was called with %i arguments" % (args))
 if(args > 0):
-    #print("The important parameter is %s." % (sys.argv[1]))
+    print("The important parameter is %s." % (sys.argv[1]))
     mybase = sys.argv[1]
 else:
-    mybase = "AP4"
+    mybase = "AP1"
 
 t1_mybase = mybase
 t2_mybase = mybase
@@ -94,7 +108,7 @@ t3_triggerfile = "/tmp/rivnan/current_"+t3_mybase+".txt"
 
 
 def GetCartLine(watchtab):
-    # this is a file watch where the file is updated by pypad filewrite macros.
+
     match watchtab:
         case 't1':
              loctriggerfile = t1_triggerfile
@@ -117,9 +131,7 @@ def GetCartLine(watchtab):
 
 global myisrunning
 myisrunning = False
-names = [] #creates a list to store the lob names in
-lmachines = []
-llines = []
+names = [] #creates a list to store the job names in
 global t1_init_colors
 global t2_init_colors
 global t3_init_colors
@@ -133,47 +145,132 @@ header_list = ['StTime', 'TTyp', 'Cart', 'Group', 'ALen', 'Title', 'Artist', 'Al
 
 #toprow = ['S.No.', 'Name', 'Age', 'Marks']
 
-def GetLMLL(forlog):
-    print("Just entered GetMLLL............................")
-    my_connll = my_db.connect()
-    # for now, by swapping the comments on the 2 query lines below you can see all running log machines or
-    # just the virtual log machines.
+
+def sort_tuples(sub_li,sortkey,rev):
+ 
+    # itemgetter(1) returns a function that can be used to retrieve the
+    # second element of a tuple (i.e., the element at index 1)
+    # this function is used as the key for sorting the sublists
+    return sorted(sub_li, key=itemgetter(sortkey), reverse=rev)
 
 
-    #stmtll = text('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` LIKE :x''')
-    stmtll = text('''SELECT LOG_MACHINES.MACHINE, LOG_MACHINES.CURRENT_LOG, LOG_MACHINES.RUNNING, LOG_MACHINES.LOG_ID, LOG_MACHINES.LOG_LINE, LOG_LINES.CART_NUMBER, LOG_LINES.COUNT FROM LOG_MACHINES INNER JOIN LOG_LINES WHERE LOG_MACHINES.CURRENT_LOG LIKE LOG_LINES.LOG_NAME AND LOG_MACHINES.LOG_LINE LIKE LOG_LINES.COUNT AND LOG_MACHINES.CURRENT_LOG LIKE :x LIMIT 1''')
-    stmtll = stmtll.bindparams(x=forlog)
-    #print("in GetLogLines, stmt is now: ", stmt)
+
+def GetGroups():
+    my_conn = my_db.connect()
+    d_set=my_conn.execute('''SELECT NAME FROM `GROUPS` ''')
+    for d in d_set:
+        groups.append(d[0])
+    my_conn.close()
+    #print("groups: ", groups)
+
+GetGroups()
+
+def GetCartPlays():
+    my_conn = my_db.connect()
+    #print("Getting log lines..........")
+    #print("in GetLogLines, data is now: ", data)
+    #print("in GetCartPlays and mynumcarts is: ", mynumcarts)
+    #print("in GetCartPlays and mycartorder is now: ", mycartorder)
+    data.clear()
+    # Robert Jeffares SQL Suggestion
+    # mysql -uroot Rivendell -A -e "select PLAY_COUNTER,TITLE, CUT_NAME,CART_NUMBER from CUTS JOIN CART ON NUMBER = CART_NUMBER WHERE NUMBER > '10000' ORDER BY PLAY_COUNTER DESC LIMIT 200 INTO OUTFILE 'repetition.txt';"
+    #stmt = text('''SELECT PLAY_COUNTER,TITLE, CUT_NAME,CART_NUMBER, CART.GROUP_NAME from CUTS JOIN CART ON NUMBER = CART_NUMBER WHERE NUMBER > '10000' AND GROUP_NAME LIKE :x ORDER BY :y DESC LIMIT :z ''')
+    stmt = text('''SELECT PLAY_COUNTER, TITLE, ARTIST, CUT_NAME,CART_NUMBER, CART.GROUP_NAME from CUTS JOIN CART ON NUMBER = CART_NUMBER WHERE GROUP_NAME LIKE :x ORDER BY :y DESC LIMIT :z ''')
+    stmt = stmt.bindparams(x=mygroup,y=mycartorder,z=mynumcarts)
     
-    c_setll=my_connll.execute(stmtll)
+    r_set=my_conn.execute(stmt)
+    for dt in r_set:
+        logrow = [dt[0],dt[1],dt[2],dt[3],dt[4],dt[5]]
+        #print("Logrow is now: ", logrow)
+        data.append(logrow)
+        #pass
+    #print("======================= in GetCartPlays, after select, data is now: ", data)
+    #srt =  sorted(data, key=operator.itemgetter(0), reverse=True)
+    match mycartorder:
+        case "CUTS.PLAY_COUNTER":
+            #print("GetCartPlaysp2 : PLAY_COUNTER order")
+            srt = sort_tuples(data,0,True)
+        case "CART.TITLE":
+            #print("GetCartPlaysp2 : Title order")
+            srt = sort_tuples(data,1,False)
+        case "CART.ARTIST":
+            #print("GetCartPlaysp2 : Title order")
+            srt = sort_tuples(data,2,False)
+        case "CUTS.CUT_NAME":
+            #print("GetCartPlaysp2 : CUT_NAME order")
+            srt = sort_tuples(data,3,False)
+
+
+    #print("in GetCartPlays, after select, data is now: ", data)
+    data.clear()
+    #print("in GetCartPlays, after select, srt is now: ", srt)
+    #print("in GetCartPlays, after select, cleared data is now: ", data)
+    for i in srt:
+        data.append(i)
+    #data = [i for i in srt]
+    #print("in GetCartPlays, after select, sorted data is now: ", data)
+    my_conn.close()
+    return(data)
 
 
 
+GetCartPlays()
+
+def word():
+
+    return ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+
+def number(max_val=1000):
+
+    return random.randint(0, max_val)
 
 
 
-    #c_setll=my_connll.execute('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` LIKE :x LIMIT 1''')
-    #c_set=my_conn.execute('''SELECT * FROM `LOG_MACHINES` WHERE `CURRENT_LOG` > '' AND `MACHINE` > 99 ''')
+def make_table(num_rows, num_cols):
 
-    print("c_setll is: ", c_setll)
+    data = [[j for j in range(num_cols)] for i in range(num_rows)]
 
-    #names = [] #creates a list to store the job names in
+    data[0] = [word() for __ in range(num_cols)]
 
-    for cll in c_setll:
-        print("cll is now: ",cll)
-        #lmachines.append(cll[0])
-        #names.append(cll[1])
-        #llines.append(cll[4])
-        fcartll = cll[5]
-        floglinell = cll[4]
+    for i in range(1, num_rows):
 
-    #var.set(a[0]) #sets the default option of options
-    #print("names is now: ", names)
-    #print("I found %s running logs." % len(names))
-    print("LOG_MACHINES.LOG_LINE is now: ", llines[0])
-    
-    my_connll.close()
-    return (fcartll, floglinell)
+        data[i] = [i, word(), *[number() for i in range(num_cols - 1)]]
+
+    return data
+
+
+cpheadings = ['Plays', 'Title', 'Artist', 'Cut Name', 'Cart Number', 'Group']
+
+
+def sort_table(table, cols, srtrev):
+
+    """ sort a table by multiple columns
+
+        table: a list of lists (or tuple of tuples) where each inner list
+
+               represents a row
+
+        cols:  a list (or tuple) specifying the column numbers to sort by
+
+               e.g. (1,0) would sort by column 1, then by column 0
+
+    """
+
+    for col in reversed(cols):
+
+        try:
+            if srtrev:
+                # srt =  sorted(data, key=operator.itemgetter(2), reverse=True)
+                table = sorted(table, key=operator.itemgetter(col), reverse=True)
+            else:
+                table = sorted(table, key=operator.itemgetter(col), reverse=False)
+
+        except Exception as e:
+
+            sg.popup_error('Error in sort_table', 'Exception in sort_table', e)
+
+    return table
+
 
 
 
@@ -193,9 +290,7 @@ def GetNewLogs():
     #names = [] #creates a list to store the job names in
 
     for c in c_set:
-        lmachines.append(c[2])
         names.append(c[6])
-        llines.append(c[9])
 
     #var.set(a[0]) #sets the default option of options
     #print("names is now: ", names)
@@ -204,8 +299,6 @@ def GetNewLogs():
 
 GetNewLogs()
 
-# below is just heree to test it, move when it workd and we know where it goes
-GetLMLL("AP1_2023_08_20")
 
 theme_dict = {'BACKGROUND': '#2B475D',
                 'TEXT': '#FFFFFF',
@@ -260,7 +353,7 @@ def FixSeconds(seconds):
 
 def GetLogLines(watchtab):
     my_conn = my_db.connect()
-    #print("***********************************************************In GetLogLines with a watchtab of: ",watchtab)
+    print("***********************************************************In GetLogLines with a watchtab of: ",watchtab)
     
 
     #loc_data.clear()
@@ -279,7 +372,7 @@ def GetLogLines(watchtab):
              print("matched t3, locmylog should show this: ", locmylog)
         case _:
             locmylog = t1_mylog
-    #print("locmylog is now: ",locmylog)
+    print("locmylog is now: ",locmylog)
 
 
     loc_mybase = locmylog[0:3]
@@ -302,16 +395,18 @@ def GetLogLines(watchtab):
         #print("Logrow is now: ", logrow)
         loc_data.append(loc_logrow)
         pass
-    #print("in GetLogLines, after select, data is now: ", loc_data)
+    print("in GetLogLines, after select, data is now: ", loc_data)
     my_conn.close()
     return loc_data
 
 t1_data = GetLogLines('t1')
 t2_data = GetLogLines('t2')
 t3_data = GetLogLines('t3')
+t4_data = GetCartPlays()
 #print("t1_data is now: ", t1_data)
 #print("t2_data is now: ", t2_data)
 #print("t3_data is now: ", t3_data)
+#print("t4_data is now: ", t4_data)
 
 
 t1_block_4 = [
@@ -334,7 +429,7 @@ t1_block_4 = [
             
             [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_t1_MYLOG_')],
             #[sg.Text(vals1[0])],
-            [sg.Text('', key='_t1_OUTPUT1_'), sg.Text('', key='_t1_OUTPUTLL1_')]
+            [sg.Text('', key='_t1_OUTPUT1_')]
         ]
 
 
@@ -385,6 +480,55 @@ t3_block_4 = [
             [sg.Text('', key='_t3_OUTPUT1_')]
         ]
 
+t41_block_4 = [
+            [ sg.Text('Choose Log Machine / Running Log'), sg.Text('', key='_t3_OUTPUT_')],
+            [sg.Combo(names, font=('Arial Bold', 14),  key='t3_logchoice', enable_events=True,  readonly=False)],
+            [sg.Table(values=t4_data, headings=header_list,
+                      auto_size_columns=True,
+                      display_row_numbers=True,
+                      justification='left', key='_t4_table_',
+                      selected_row_colors='red on yellow',
+                      vertical_scroll_only = False,
+                      enable_events=True,
+                      expand_x=True,
+                      expand_y=True,
+                      enable_click_events=True,
+                      num_rows=min(25, len(t4_data))
+                      )
+             ],
+            #[sg.Text('Riv New Airplay Watching Log %s' % vals1[0])],
+            
+            [sg.Text('Riv New Airplay Watching Log '), sg.Text('', key='_t4_MYLOG_')],
+            #[sg.Text(vals1[0])],
+            [sg.Text('', key='_t4_OUTPUT1_')]
+        ]
+
+
+
+t4_block_4 = [[sg.Table(values=t4_data[1:][:], headings=cpheadings, max_col_width=25,
+                    auto_size_columns=True,
+                    display_row_numbers=True,
+                    justification='right',
+                    num_rows=min(25, len(t4_data)),
+                    key='-TABLE-',
+                    selected_row_colors='red on yellow',
+                    enable_events=True,
+                    expand_x=True,
+                    expand_y=True,
+                    enable_click_events=True,           # Comment out to not enable header and other clicks
+                    tooltip='This is a table')],
+          
+          [ sg.Text('Choose / Enter Options'), sg.Text('', key='_OUTPUT_')],
+            [sg.Text('Group'),
+             sg.Combo(groups, mygroup, font=('Arial Bold', 14),  key='groupchoice', enable_events=True,  readonly=False),
+             sg.Text('Cart Limit'),
+             sg.Text('', key='_CL_OUTPUT_'),
+             sg.Input(mynumcarts, enable_events=True, key='-CL_INPUT-', font=('Arial Bold', 20), expand_x=False, justification='left')
+             ],
+
+          [sg.Text('Cell clicked:'), sg.T(k='-CLICKED-')]
+]
+
 
 tab1_layout = t1_block_4
 
@@ -392,11 +536,15 @@ tab2_layout = t2_block_4
 
 tab3_layout = t3_block_4
 
-tabgrp1_layout = [[sg.TabGroup([[sg.Tab('Log Control 1', tab1_layout, background_color='tan1', key='-mykey-'),
-                         sg.Tab('Log Control 2', tab2_layout, background_color='tan1'),
-                         sg.Tab('Log Control 3', tab3_layout, background_color='tan1')]],
+tab4_layout = t4_block_4
+
+tabgrp1_layout = [[sg.TabGroup([
+    [sg.Tab('Log Control 1', tab1_layout, background_color='tan1', key='-mykey-'),
+     sg.Tab('Log Control 2', tab2_layout, background_color='tan1'),
+     sg.Tab('Log Control 3', tab3_layout, background_color='tan1'),
+     sg.Tab('Cart Plays Tab', tab4_layout, background_color='tan1')]],
                        key='-group1-', title_color='red',
-                       selected_title_color='green', selected_background_color='white', tab_location='topleft')]]
+                       selected_title_color='green', tab_location='bottom')]]
 
 
 
@@ -524,15 +672,9 @@ t2_myoldloginfo=''
 t2_myloginfo=''
 t3_myoldloginfo=''
 t3_myloginfo=''
-t1_myoldloginfoll=''
-t1_myloginfoll=''
-t2_myoldloginfoll=''
-t2_myloginfoll=''
-t3_myoldloginfoll=''
-t3_myloginfoll=''
 while True:             # Event Loop
     event, values = window.read(timeout=1000, timeout_key='timeout')
-    #print("event | values is ", event, " | ", values)
+    print("event | values is ", event, " | ", values)
     
     if event != 'timeout':
         #print(ev2)
@@ -550,20 +692,16 @@ while True:             # Event Loop
 
         t1_myoldloginfo = t1_myloginfo
         t1_myloginfo = GetCartLine('t1')
-        t1_myloginfoll = GetLMLL(t1_mylog)
         if t1_myoldloginfo != t1_myloginfo :
             myisrunning = True
             mycartstart = time.time()
             mycartelapse = 0            
             #print("myloginfo changed:", myoldloginfo, " to ", myloginfo)
             zfcart1 = int(t1_myloginfo[0])
-            zfcartll1 = int(t1_myloginfoll[0])
             #print("zfcart1 is: ", zfcart1)
             #print(data[zfcart1])
             #window['_cf1-num_'].update(zfcart1)
             zflogline1 = int(t1_myloginfo[1])
-            zfloglinell1 = int(t1_myloginfoll[1])
-            #GetLMLL("AP1_2023_08_20")
             #print("zflogline1 is: ",zflogline1)
             # str(timedelta(seconds=elapsed))
             #print("starttime number: ", (data[zflogline1][0]/1000))
@@ -679,12 +817,8 @@ while True:             # Event Loop
         #print("============================in gettime - Here comes myloginfo: ", myloginfo)
         zfcart = str(t1_myloginfo[0])
         zflogline = str(t1_myloginfo[1])
-        zfcartll = str(t1_myloginfoll[0])
-        zfloglinell = str(t1_myloginfoll[1])
         #print("zflogline is currently: ", zflogline)
-        window["_t1_OUTPUT1_"].update("pp:z "+zflogline+" pp:cart "+zfcart)
-        #window["_t1_OUTPUT1_"].update("pp ",zflogline)
-        window["_t1_OUTPUTLL1_"].update("db:ll "+zfloglinell+" db:cart "+zfcartll)
+        window["_t1_OUTPUT1_"].update(zflogline)
         #win2["_table_"].Widget.see(int(zflogline))
         if int(zflogline) > 31:
             window["_t1_table_"].Widget.yview_moveto(((int(zflogline)-15)/len(t1_data)))
@@ -834,9 +968,9 @@ while True:             # Event Loop
         t1_init_colors = True
         #print("mylog is now: ", mylog)
         t1_mylog = values['t1_logchoice']
-        #print("t1_mylog is now: ", t1_mylog)
+        print("t1_mylog is now: ", t1_mylog)
         t1_mybase = t1_mylog[0:3]
-        #print("t1_mybase is now: ", t1_mybase)
+        print("t1_mybase is now: ", t1_mybase)
         t1_triggerfile = "/tmp/rivnan/current_"+t1_mybase+".txt"
         
         t1_data = GetLogLines('t1')
@@ -855,9 +989,9 @@ while True:             # Event Loop
         t2_init_colors = True
         #print("mylog is now: ", mylog)
         t2_mylog = values['t2_logchoice']
-        #print("t2_mylog is now: ", t2_mylog)
+        print("t2_mylog is now: ", t2_mylog)
         t2_mybase = t2_mylog[0:3]
-        #print("t2_mybase is now: ", t2_mybase)
+        print("t2_mybase is now: ", t2_mybase)
         t2_triggerfile = "/tmp/rivnan/current_"+t2_mybase+".txt"
         t2_data = GetLogLines('t2')
         window['_t2_table_'].update(values=t2_data)
@@ -874,16 +1008,61 @@ while True:             # Event Loop
         t3_init_colors = True
         #print("mylog is now: ", mylog)
         t3_mylog = values['t3_logchoice']
-        #print("t3_mylog is now: ", t3_mylog)
+        print("t3_mylog is now: ", t3_mylog)
         t3_mybase = t3_mylog[0:3]
-        #print("t3_mybase is now: ", t3_mybase)
+        print("t3_mybase is now: ", t3_mybase)
         t3_triggerfile = "/tmp/rivnan/current_"+t3_mybase+".txt"
         t3_data = GetLogLines('t3')
         window['_t3_table_'].update(values=t3_data)
         window['_t3_MYLOG_'].update(t3_mylog)
 
+    if event == 'groupchoice':
+        #print("Select Group changed:", myoldloginfo, " to ", myloginfo)
+        mygroup = values['groupchoice']
+        GetCartPlays()
+        window['-TABLE-'].update(values=data)
+    elif event == '-CL_INPUT-':
+        print("Event is -CL_INPUT-")
+        print(values['-CL_INPUT-'])
+        if values['-CL_INPUT-'][-1] not in ('0123456789'):
+            sg.popup("Only digits allowed")
+            window['-CL_INPUT-'].update(values['-CL_INPUT-'][:-1])
+        print("Before, mynumcarts is: ", mynumcarts)
+        mynumcarts = int(values['-CL_INPUT-'])
+        print("After, mynumcarts is: ", mynumcarts)
+        GetCartPlays()
+        window['-TABLE-'].update(values=data)
+        print("After GetCartPlays, mynumcarts is: ", mynumcarts)
 
+    if isinstance(event, tuple):
 
+        # TABLE CLICKED Event has value in format ('-TABLE=', '+CLICKED+', (row,col))
+
+        if event[0] == '-TABLE-':
+
+            if event[2][0] == -1 and event[2][1] != -1:           # Header was clicked and wasn't the "row" column
+
+                col_num_clicked = event[2][1]
+                print("col_num_clicked: ", col_num_clicked," mylastcol: ", mylastcol)
+                if (col_num_clicked == mylastcol):
+                    if myreverse:
+                        myreverse = False
+                    else:
+                        myreverse = True
+                else:
+                    mylastcol = col_num_clicked
+                
+                if myreverse:
+                    new_table = sort_table(data[1:][:],(col_num_clicked, 0), True)
+                    # srt =  sorted(data, key=operator.itemgetter(2), reverse=True)
+                else:
+                    new_table = sort_table(data[1:][:],(col_num_clicked, 0), False)
+
+                window['-TABLE-'].update(new_table)
+
+                data = [data[0]] + new_table
+
+            window['-CLICKED-'].update(f'{event[2][0]},{event[2][1]}')
 
 
 
